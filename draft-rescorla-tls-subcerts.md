@@ -1,5 +1,5 @@
 ---
-title: Limited Certificate Delegation for TLS
+title: Sub-Certificates for TLS
 abbrev: 
 docname: draft-rescorla-tls-subcerts-latest
 category: std
@@ -18,178 +18,270 @@ author:
        name: Eric Rescorla
        organization: RTFM, Inc.
        email: ekr@rtfm.com
+ -
+       ins: R. Barnes
+       name: Richard Barnes
+       organization: Mozilla
+       email: rlb@ipv.sx
 
 
 
 --- abstract
 
-This document describes a mechanism for allowing TLS servers to safely
-create delegation certificates without breaking existing clients.
+The organizational separation between the operator of a TLS server and the
+certificate authority that provides it credentials can cause problems, for
+example when it comes to reducing the lifetime of certificates or supporting new
+cryptographic algorithms.  This document describes a mechanism to allow TLS
+server operators to create their own delegation certificates without breaking
+compatibility with clients that do not support this specification.
 
 --- middle
 
 #Introduction
 
-There are a number of scenarios in which it is desirable for entities
-which own a given identity ("name-holders") 
-to be able to arrange for subordinate certificates that would allow some
-TLS server to act on their behalf. For instance:
+Typically, a TLS server uses a certificate provided by some entity other than
+the operator of the server (a "Certification Authority" or CA) {{?RFC5246}}
+{{?RFC5280}}.  This organizational separation makes the TLS server operator
+dependent on the CA for some aspects of its operations, for example:
 
-* An origin site might wish to have a CDN serve pages for them, but
-  be able to revoke that delegation easily if they change vendors.
-  This is easiest with short-lived certificates.
-* A server operator might wish to deploy servers in data centers with
-  weak security and be able to revoke that delegation easily if they suspect
-  compromise. Short-lived certificates work here as well.
-* A server might want to deploy certificates with keys of a type that
-  CAs do not widely support (e.g., static ECDHE keys or
-  EdDSA {{?I-D.irtf-cfrg-eddsa}}).
+* Whenever the server operator wants to deploy a new certificate, it has to
+  interact with the CA.
+* The server operator can only use TLS authentication schemes for which the CA
+  will issue credentials.
 
-In all of these cases, the name-holder is authorized for some set of
-identities and just wishes to obtain new certificates for some or all
-of those identities.  In some cases, it is possible for the
-end-entities to get these certificates from an existing CA, but in
-practice, even with automated protocols such as ACME
-{{?I-D.ietf-acme-acme}} it is painful to get large numbers of
-certificates, especially if they have unusual properties such as very
-short-lifetimes or unsupported key formats. It would be far more
-convenient for operators to obtain a single certificate and then use
-it to issue new subordinate certifificates with the desired
-properties.
+These dependencies cause problems in practice.  Server operators often want to
+create short-lived certificates for servers in low-trust zones such as CDNs or
+remote data centers.  The risk inherent in cross-organizational transactions
+makes it infeasible to rely on an external CA for such short-lived credentials.
 
-In theory, this should be straightforward using existing
-PKIX {{!RFC5280}} mechanisms: the CA issues the entity with a suitably
-constrained CA certificate that can only be used to issue the
-appropriate class of end-entity certificates. In practice, however,
-this can not be done safely because clients have limited support
-for the appropriate PKIX mechanisms (for instance, Firefox only started
-supporting NameConstraints in XXX) and thus may refuse to accept
-validly constrained certificates or fail to enforce the constraints
-(depending on the precise certificate structure).
-Instead, operators are forced to fall back on offline delegation
-mechanisms such as those being considered in LURK, with the result
-being suboptimal performance.
+To remove these dependencies, this document proposes a limited delegation
+mechanism that allows a TLS server operator to issue its own credentials
+("sub-certificates") within the scope of a certificate issued by an external CA.
+Because the above problems do not relate to the CAs inherent function of
+validating possession of names, it is safe to make such delegations as long as
+they only enable the recipient of the delegation to speak for names that the CA
+has authorized.
 
-This document addresses this problem by describing a limited
-delegation mechanism intended to address this issue.
-
+[[ Ed. - We use the phrase "credential" for the sub-certificates since it's an
+open issue whether they will be certificates or not. ]]
 
 # Solution Overview
 
-The basic intuition behind the solution in this document is that a partial
-solution is good enough. Consider the case of a CDN which fronts for domain
-X using LURK, which means that every full TLS handshake requires a round
-trip to the origin server. If we merely remove this round trip for a large
-fraction of clients (i.e., those which support this specification) then
-that represents a significant performance improvement, and the remaining
-clients can fall back to LURK.
+A sub-certificate is a digitally signed data structure with the following
+semantic fields:
 
-This suggests a two-part solution:
+* A validity interval
+* A public key (with its associated algorithm)
 
-* A new TLS extension which allows a client to indicate that it
-  supports certificate delegation ({{tls-extension}}).
+The signature on the sub-certificate indicates a delegation from a normal
+certificate.  The key pair used to sign a sub-certificate is presumed to be one
+whose public key is contained in an X.509 certificate that associates one or
+more names to the sub-certificate signing key.
 
-* A way to mark certificates as being usable for signing subordinate
-  certificates {{certificate-format}}.
+A TLS handshake that uses sub-certificates differs from a normal handshake in a
+few important ways:
 
-Clients which support this document indicate the extension, which tells
-the server that it can send a suitable subordinate certificate. Otherwise,
-the server falls back to its ordinary behavior (LURK, certificates with older
-keys, etc.)
+* The client provides an extension in its ClientHello that indicates support for
+  this mechanism
+* The server provides a sub-certificate in addition to a normal certificate
+  chain
+* The client uses information in the server's normal certificate to verify the
+  signature on the sub-certificate and verify that the server is asserting an
+  expected identity
+* The client uses the public key in the sub-certificate to verify the
+  CertificateVerify message in the TLS handshake
+
+[[ Ed. - The specifics of how sub-certificates are structured and providedby the
+server are still to be determined; see below ]]
+
+# Related Work
 
 
-# TLS Extension
+Many of the use cases for sub-certificates can also be addressed using purely
+server-side mechanisms that do not require changes to client behavior (e.g.,
+LURK {{?I-D.mglt-lurk-tls-requirements}}).  These mechanisms, however, incur
+per-transaction latency, since the front-end server has to interact with a
+back-end server that holds a private key.  The mechanism proposed in this
+document allows the delegation to be done off-line, with no per-transaction
+latency.
+
+~~~~~~~~~~
+LURK:
+
+Client            Front-End            Back-End
+  |----ClientHello--->|                    |
+  |<---ServerHello----|                    |
+  |<---Certificate----|                    |
+  |                   |<-------LURK------->|
+  |<---CertVerify-----|                    |
+  |        ...        |                    |
+
+
+Sub-certificates:
+
+Client            Front-End            Back-End
+  |                   |<---Sub-Cert Prov---|
+  |----ClientHello--->|                    |
+  |<---ServerHello----|                    |
+  |<---Certificate----|                    |
+  |<---CertVerify-----|                    |
+~~~~~~~~~~
+
+These two classes of mechanism can be complementary.  A server could use
+sub-certificates for clients that support them, while using LURK to support
+legacy clients.
+
+It is possible to address the short-lived certificate concerns above by
+automating certificate issuance, e.g., with ACME {{?I-D.ietf-acme-acme}}.
+In addition to requiring frequent operationally-critical interactions with an
+external party, this makes the server operator dependent on the CA's willingness
+to issue certificates with sufficiently short lifetimes.  It also fails to
+address the issues with algorithm support.  Nonetheless, existing automated
+issuance APIs like ACME may be useful for provisioning sub-certificates, within
+an operator network.
+
+# Client Behavior
 
 This document defines the following extension code point.
 
-~~~~
+~~~~~~~~~~
     enum {
       ...
       supports_sub_certificate(TBD),
       (65535)
     } ExtensionType;
-~~~~
+~~~~~~~~~~
 
 A client which supports this document SHALL send an empty "supports_sub_certificate"
 extension in its ClientHello. A server MUST NOT send this extension. If the extension
-is present, the server MAY send a certificate chain in its Certificate message which
-contains a certificate as specified in the following section.
+is present, the server MAY send a sub-certificate.  If the extension is not
+present, the server MUST NOT send a sub-certificate.  A sub-certificate MUST NOT
+be provided unless a Certificate message is also sent.
+
+On receiving a sub-certificate and a certificate chain, the client validates the
+certificate chain and matches the end-entity certificate to the server's
+expected identity following its normal procedures.  It then takes the following
+additional steps:
+
+* Verify that the current time is within the validity interval of the
+  sub-certificate
+* Use the public key in the server's end-entity certificate to verify the
+  signature on the sub-certificate
+* Use the public key in the sub-certificate to verify the CertificateVerify
+  message provided in the handshake
 
 
-# Certificate Format
+# Sub-Certificates
 
-We need some mechanism for indicating that a certificate may be used to authorize
-subcertificates. There are two primary options:
+[[ Ed. - This section is currently a sketch, intended to lay out the design
+space to facilitate discussion ]]
 
-* Take advantage of existing PKIX mechanisms
-* Define a new mechanism
+Sub-certificates obviously need to have some defined structure.  It is possible
+to re-use X.509, but it may be better to define something new.
 
-In either case, because the client indicates that it supports the mechanism,
-we do not need to worry about older clients refusing to accept them. However,
-it is critical that it older clients not incorrectly accept them for certificates
-outside of their proper scope (e.g., for names that were not authorized by
-the CA to the name-holder).
+The format question also mostly decides the question of how the sub-certificate
+will be signed and delivered to the client.  If the sub-certificate is an X.509
+certificate, then it will be signed in that format, and probably provided in the
+TLS Certificate message.  If some new structure is devised, then it will need to
+define a signature method, and it will probably make more sense to carry it in a
+TLS extension or a new TLS handshake message.
+
+The delivery mechanism is mostly a trivial question, but given that the server
+is switching between a normal certificate chain and one including a
+sub-certificate based on a ClientHello extension, there could be some impact on
+the ease of implementation.  For example, it may be easier to change the
+extensions in the ServerHello than to switch the certificate chain.
+
+## Option 1a. Name Constraints
+
+It would be consistent with the requirements above to realize sub-certificates
+by having the CA issue a subordinate CA certificate to the TLS server operator,
+with a nameConstraints extension encoding the names the server operator is
+authorized for.  Then the sub-certificates would simply be normal end-entity
+certificates issued under this subordinate.
+
+In order for this solution to be safe, the subordinate CA certificate needs to
+have a critical nameConstraints extension.  Historically, this solution has been
+unworkable due to legacy clients that could not process name constraints.
+However, since in this case we require the client to indicate support, it should
+be possible to have critical name constraints without compatibility impact.
+
+Pro:
+
+* Re-use existing issuance and validation code
+* No change to client certificate validation and CertificateVerify processing
+
+Con:
+
+* Requires server operator to get a name-constrained subordinate CA certificate
+* Name constraints are not universally recognized
+* X.509 provides much richer semantics than required
 
 
-## Existing PKIX Mechanisms
+## Option 1b. End Entities as Issuers
 
-The obvious choice is to use existing PKIX mechanisms [TODO: Barnes to describe.].
-In this case, the authorizing certificate would technically be a CA for the
-subordinate  certificate and the
-resulting certificate chain would be valid per {{RFC5280}}, which
-is clearly cleanest.
+One could also imagine a scheme in which the server could use an end-entity
+certificate as the issuer for a sub-certificate.  Since servers are typically
+issued end-entity certificates by CAs, this could align better with CA issuance
+practices.
 
-There are two primary difficulties:
+It's important to note that this would not enable existing end-entity
+certificates to be used to issue sub-certificates.  That would create risks such
+as those noted in [Jager et al.].  So there would be a need to define some marker
+that would be inserted into an end-entity certificate to indicate that it could
+be used to issue sub-certificates.
 
-* These mechanisms (principally NameConstraints) are somewhat clunky.
-* It is unclear to what extent existing implementations properly handle
-  these mechanisms.
+Pro:
 
-[TODO: Add more here.]
+* No change to client CertificateVerify processing (still uses last cert in the
+  chain)
 
-## New Mechanism
+Con:
 
-The alternative design is to define a new certificate extension which indicates
-that the certificate may be used to sign subordinate extensions. This extension
-could be very simple, just consisting of a single bit indicating that the chain
-may be extended by one certificate, with the terminal certificate containing
-a subset of the names in the immediately authorizing certificate.
-
-The advantage of this design is that it is definitely safe: any reasonable
-existing client will not accept the resulting certificates (and one which
-does is almost certainly already insecure). The disadvantage is that it produces
-invalid certificate chains, which is inelegant and risks confusing validators.
+* Violates the semantics of the CA bit in basicConstraints
+* Requires change to X.509 validation logic to allow sub-certificates
+* X.509 provides much richer semantics than required
 
 
-## Open Issue: Use of Signing Certificate {#open-issue}
+## Option 2. Define a New Structure
 
-The certificate which the CA issues to the name-holder can be configured so that
-it is usable directly as a TLS end-entity certificate or alternately can
-be configured so that it is not acceptable for TLS connections but only
-for signing other certificates. In the former case, the name-holder need only
-have one certificate, but with the risk that if the TLS server is compromised
-the attacker may issue themselves an arbitrary number of subordinate
-certificates. Conversely, it may be configures so that it is not directly
-usable, thus requiring the name-holder to get two certificates, one for
-signing subordinates and one for use in its TLS server.
+While X.509 forbids end-entity certificates from being used as issuers for other
+certificates, it is perfectly fine to use them to issue other signed objects.
+We could define a new signed object format that would encode only the semantics
+that are needed for this application.  For example, the TLS `digitally-signed`
+structure could be used:
+
+~~~~~~~~~~
+digitally-signed struct {
+  uint64 notBefore;
+  uint64 notAfter;
+  SignatureScheme algorithm;
+  opaque publicKey<0..2^24-1>;
+} SubCertificate;
+~~~~~~~~~~
+
+This would avoid any mis-match in semantics with X.509, and would likely require
+more processing code in the client.  The code changes would be localized to the
+TLS stack, which avoids changing security-critical and often delicate PKI code.
+
+As in the above case, there would be a need for a special marker in the
+end-entity certificate that declares that the key pair can be used to issue
+sub-certificates.
+
+Pro:
+
+* No change to client certificate validation
+* No risk of conflict with X.509 semantics
+
+Con:
+
+* Requires new logic for generating and verifying sub-certificates
+* Requires changes to client CertificateVerify processing
+* Requires marker in end-entity certificate (as above)
 
 # IANA Considerations
 
 # Security Considerations
-
-It is imperative that this mechanism not create new risk for existing clients.
-In particular, it must protect against the following risks:
-
-* Existing certificates MUST NOT be able to sign subordinate certificates,
-  even with new clients, in order to prevent attacks like those described
-  by Jager et al. [REF].
-
-* Holders of certificates compliant with this specification MUST NOT be
-  able to sign new certificates for identities other than those authorized
-  by the CA.
-
-If certificates may be used both for signing subordinate certificates and
-as an end-entity certificate themselves (see {{open-issue}}.
 
 
 
