@@ -82,7 +82,7 @@ The signature on the sub-certificate indicates a delegation from the
 master certificate which is issued to the TLS server operator. The key pair used
 to sign a sub-certificate is presumed to be one whose public key is
 contained in an X.509 certificate that associates one or more names to
-the sub-certificate signing key.
+the sub-certificate signing key. 
 
 A TLS handshake that uses sub-certificates differs from a normal handshake in a
 few important ways:
@@ -96,6 +96,11 @@ few important ways:
   expected identity.
 * The client uses the public key in the sub-certificate as the server's
   working key for the TLS handshake.
+
+The sub-certificate signature is subject to the negotiated signature algorithms.
+A sub-certificate cannot be used if the client advertises support for sub-certificate
+however a server does not have a leaf certificate which is compatible with any of  
+the negotiated signature algorithms.
 
 [[ Ed. - The specifics of how sub-certificates are structured and provided by the
 server are still to be determined; see below. ]]
