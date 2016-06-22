@@ -40,8 +40,8 @@ compatibility with clients that do not support this specification.
 #Introduction
 
 Typically, a TLS server uses a certificate provided by some entity other than
-the operator of the server (a "Certification Authority" or CA) {{?RFC5246}}
-{{?RFC5280}}.  This organizational separation makes the TLS server operator
+the operator of the server (a "Certification Authority" or CA) {{!RFC5246}}
+{{!RFC5280}}.  This organizational separation makes the TLS server operator
 dependent on the CA for some aspects of its operations, for example:
 
 * Whenever the server operator wants to deploy a new certificate, it has to
@@ -73,6 +73,10 @@ semantic fields:
 
 * A validity interval
 * A public key (with its associated algorithm)
+
+[[ OPEN ISSUE - Should it be possible to restrict a sub-certificate to a subset
+of the names in the master certificate?  We currently assume that all names are
+inherited. ]]
 
 The signature on the sub-certificate indicates a delegation from the
 master certificate which is issued to the TLS server operator. The key pair used
@@ -169,14 +173,14 @@ expected identity following its normal procedures.  It then takes the following
 additional steps:
 
 * Verify that the current time is within the validity interval of the
-  sub-certificate.
+  sub-certificate
 * Use the public key in the server's end-entity certificate to verify the
   signature on the sub-certificate
 * Use the public key in the sub-certificate to verify the CertificateVerify
   message provided in the handshake
 
-[[Ed. - Should it be possible to restrict the sub-certificate beyond what's
-in the master certificate.]]
+[[ Ed. - This will need to be updated if the sub-certificate can be restricted
+to a subset of the names in the master certificate. ]]
 
 # Sub-Certificates
 
@@ -192,7 +196,7 @@ sub-certificate is an X.509 certificate, then it will be signed in
 that format, and probably provided in the TLS Certificate message as
 the end-entity certificate.  If some new structure is devised, then it
 will need to define a signature method, and it will probably make more
-sense to carry it as a new TLS certificate format {{!RFC6091}} or
+sense to carry it as a new TLS certificate format {{?RFC6091}} or
 in a TLS extension.
 
 The delivery mechanism is mostly a trivial question, but given that the server
@@ -275,10 +279,12 @@ digitally-signed struct {
 
 This would avoid any mis-match in semantics with X.509, and would likely require
 more processing code in the client.  The code changes would be localized to the
-TLS stack, which has the advantage of changing security-critical and often delicate
-PKI code (though of course moves that complexity to the TLS stack).
+TLS stack, which has the advantage of avoiding changes to security-critical and
+often delicate PKI code (though of course moves that complexity to the TLS
+stack).
 
-[[OPEN ISSUE: How would you represent non-signature keys?]]
+[[ OPEN ISSUE: If we use this syntax, how would you represent non-signature
+keys? ]]
 
 As in the above case, there would be a need for a special marker in the
 master certificate that declares that the key pair can be used to issue
@@ -295,27 +301,24 @@ Con:
 * Requires changes to client CertificateVerify processing
 * Requires marker in end-entity certificate (as above)
 
-# Open Issue: Use of Signing Certificate {#open-issue}
+## Re-Use of the Master Certificate
 
-The master certificate can be configured so tha it is usable directly
-as a TLS end-entity certificate (this is the natural design for Option
-2) or alternately can be configured so that it is not acceptable for
-TLS connections but only for signing other certificates. In the former
-case, the server operator need only have one certificate, but with the
-risk that if the TLS server is compromised the attacker could issue
-themselves an arbitrary number of subordinate
-certificates. Conversely, the master certificate may be configured so
-that it is not directly usable, thus requiring the name-holder to get
-two certificates, one for signing sub-certificates and one for use in its
-TLS server. This adds additional complexity for the operator but
-allows the master certificate to be offline.
+[[ OPEN ISSUE ]]
+
+The master certificate can be configured so that it is usable directly as a TLS
+end-entity certificate (this is the natural design for Option 2) or alternately
+can be configured so that it is not acceptable as a TLS server certificate but
+rather can only be used for signing sub-certificates. In the former case, the
+server operator need only have one certificate, but with the risk that if the
+TLS server is compromised the attacker could issue themselves an arbitrary
+number of sub-certificates. Conversely, the master certificate may be configured
+so that it is not directly usable, thus requiring the name-holder to get two
+certificates, one for signing sub-certificates and one for use in its TLS
+server. This adds additional complexity for the operator but allows the master
+certificate to be offline.
 
 # IANA Considerations
 
 # Security Considerations
-
-
-
-
 
 --- back
