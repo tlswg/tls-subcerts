@@ -97,6 +97,11 @@ few important ways:
 * The client uses the public key in the sub-certificate as the server's
   working key for the TLS handshake.
 
+The sub-certificate signature is subject to the negotiated signature algorithms.
+A sub-certificate cannot be used if the client advertises support for sub-certificate
+however a server does not have a master certificate which is compatible with any of  
+the negotiated signature algorithms.
+
 [[ Ed. - The specifics of how sub-certificates are structured and provided by the
 server are still to be determined; see below. ]]
 
