@@ -71,6 +71,13 @@ CA as a "master certificate" and the one issued by the operator as a "sub-certif
 [[ Ed. - We use the phrase "credential" for the sub-certificates since it's an
 open issue whether they will be certificates or not. ]]
 
+[[ Ed. - This document is framed as a single solution, because it would be best
+for the WG to ultimately settle on one solution to this problem.  However, to
+  facilitate discussion, we outline several possible options for how
+  sub-certificate can be realized (see {{sub-certificates}}).  Once the WG agrees
+  on an overall approach, this draft will be revised to provide more details of
+  that approach. ]]
+
 # Solution Overview
 
 A sub-certificate is a digitally signed data structure with the following
