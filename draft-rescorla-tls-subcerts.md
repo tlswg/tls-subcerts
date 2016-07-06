@@ -92,40 +92,48 @@ semantic fields:
 * A public key (with its associated algorithm)
 * A list of valid server names
 
-The signature on the delegated credential indicates a delegation from the
-certificate which is issued to the TLS server operator. The key pair used
-to sign a delegated credential is presumed to be one whose public key is
-contained in an X.509 certificate that associates one or more names to
-the sub-certificate signing key.
+The signature on the credential indicates a delegation from the certificate which
+is issued to the TLS server operator. The key pair used to sign a credential is
+presumed to be one whose public key is contained in an X.509 certificate that
+associates one or more names to the credential.
 
-A TLS handshake that uses delegated credentials differs from a normal handshake
+A TLS handshake that uses credentials differs from a normal handshake
 in a few important ways:
 
 * The client provides an extension in its ClientHello that indicates support for
   this mechanism
 * The server provides both the certificate chain terminating in its certificate
-  as well as the delegated credential.
+  as well as the credential.
 * The client uses information in the server's certificate to verify the
-  signature on the delegated credential and verify that the server is asserting an
+  signature on the credential and verify that the server is asserting an
   expected identity.
-* The client uses the public key in the delegated credential as the server's
+* The client uses the public key in the credential as the server's
   working key for the TLS handshake.
-* The client uses the list of valid server names in the delegated credential to
+* The client uses the list of valid server names in the credential to
   verify that the credential is valid for the server.
 
-The delegated credential signature is subject to the negotiated signature algorithms.
-A delegated credential cannot be used if the client advertises support for delegated
-credentials however a server does not have a certificate which is compatible with any of
+The credential signature is subject to the negotiated signature algorithms.
+A credential cannot be used if the client advertises support for credentials
+however a server does not have a certificate which is compatible with any of
 the negotiated signature algorithms.
 
-Delegated credentials allow the server to terminate TLS connections on behalf of the
-certificate owner. If a delegated credential is stolen, there is no mechanism for revoking
+It was noted by [J\"{a}ger et al.] that certificates in use by servers that
+support outdated protocols such as SSLv2 can be used to forge signatures for
+certificates that contain the keyEncipherment KeyUsage [[RFC5280 section 4.2.1.3]]
+In order to prevent this type of cross-protocol attack, clients MUST NOT accept
+connections from certificates with the keyEncipherment KeyUsage.
+
+[[ Nick - This is a much less stringent requirement than a new flag, since it means
+that all existing ECDSA certificates can be re-used.]]
+
+Credentials allow the server to terminate TLS connections on behalf of the
+certificate owner. If a credential is stolen, there is no mechanism for revoking
 it without revoking the certificate itself.  To limit the exposure of a delegation
-credential compromise, servers MUST NOT issue delegated credentials with a validity period
-longer than 7 days. Clients MUST NOT accept delegated credentials with longer validity
+credential compromise, servers MUST NOT issue credentials with a validity period
+longer than 7 days. Clients MUST NOT accept credentials with longer validity
 periods. [[ TODO: which alert should the client send? ]]
 
-[[ Ed. - The specifics of how delegated credentials are structured and provided by the
+[[ Ed. - The specifics of how credentials are structured and provided by the
 server are still to be determined; see below. ]]
 
 
@@ -133,7 +141,7 @@ server are still to be determined; see below. ]]
 # Related Work
 
 
-Many of the use cases for sub-certificates can also be addressed using purely
+Many of the use cases for delegated credentials can also be addressed using purely
 server-side mechanisms that do not require changes to client behavior (e.g.,
 LURK {{?I-D.mglt-lurk-tls-requirements}}).  These mechanisms, however, incur
 per-transaction latency, since the front-end server has to interact with a
@@ -154,7 +162,7 @@ Client            Front-End            Back-End
   |        ...        |                    |
 
 
-Delegated Credentials:
+Delegated credentials:
 
 Client            Front-End            Back-End
   |                   |<---Cred Provision--|
@@ -165,7 +173,7 @@ Client            Front-End            Back-End
 ~~~~~~~~~~
 
 These two classes of mechanism can be complementary.  A server could use
-delegated credentials for clients that support them, while using LURK to support
+credentials for clients that support them, while using LURK to support
 legacy clients.
 
 It is possible to address the short-lived certificate concerns above by
@@ -174,7 +182,7 @@ In addition to requiring frequent operationally-critical interactions with an
 external party, this makes the server operator dependent on the CA's willingness
 to issue certificates with sufficiently short lifetimes.  It also fails to
 address the issues with algorithm support.  Nonetheless, existing automated
-issuance APIs like ACME may be useful for provisioning delegated credentials,
+issuance APIs like ACME may be useful for provisioning credentials,
 within an operator network.
 
 # Client Behavior
@@ -192,25 +200,26 @@ This document defines the following extension code point.
 A client which supports this document SHALL send an empty "delegated_credential"
 extension in its ClientHello.
 
-[[Option 1]] A server MUST NOT send this extension. If the extension
-is present, the server MAY send a sub-certificate.  If the extension is not
-present, the server MUST NOT send a sub-certificate.  A sub-certificate MUST NOT
+[[Option 1]] A server MUST NOT send this extension.  If the extension
+is present, the server MAY send a credential.  If the extension is not
+present, the server MUST NOT send a credential.  A credential MUST NOT
 be provided unless a Certificate message is also sent.
 [[Option 2]] If the extension is present, the server MAY send a "delegated
-credential" extension containing the delegated credential in the response. If the extension
-is not present, the server MUST NOT send a delegated credential.  A delegated credential
+credential" extension containing the credential in the response. If the extension
+is not present, the server MUST NOT send a credential.  A credential
 MUST NOT be provided unless a Certificate message is also sent.
 
-On receiving a delegated credential and a certificate chain, the client validates the
+On receiving a credential and a certificate chain, the client validates the
 certificate chain and matches the end-entity certificate to the server's
 expected identity following its normal procedures.  It then takes the following
 additional steps:
 
 * Verify that the current time is within the validity interval of the
-  delegated credential
+  credential
+* Verify that the server name is included in the credential
 * Use the public key in the server's end-entity certificate to verify the
-  signature on the delegated credential
-* Use the public key in the delegated credential to verify the CertificateVerify
+  signature on the credential
+* Use the public key in the credential to verify the CertificateVerify
   message provided in the handshake
 
 [[ Ed. - This will need to be updated if the sub-certificate can be restricted
@@ -221,12 +230,12 @@ to a subset of the names in the master certificate. ]]
 [[ Ed. - This section is currently a sketch, intended to lay out the design
 space to facilitate discussion ]]
 
-Sub-certificates obviously need to have some defined structure.  It is possible
+Credentials obviously need to have some defined structure.  It is possible
 to re-use X.509, but it may be better to define something new.
 
 The format question also mostly decides the question of how the
-sub-certificate will be signed and delivered to the client.  If the
-sub-certificate is an X.509 certificate, then it will be signed in
+credential will be signed and delivered to the client.  If the
+credential is an X.509 certificate, then it will be signed in
 that format, and probably provided in the TLS Certificate message as
 the end-entity certificate.  If some new structure is devised, then it
 will need to define a signature method, and it will probably make more
@@ -234,21 +243,21 @@ sense to carry it in a TLS extension.
 
 The delivery mechanism is mostly a trivial question, but given that the server
 is switching between a normal certificate chain and one including a
-sub-certificate based on a ClientHello extension, there could be some impact on
+credential based on a ClientHello extension, there could be some impact on
 the ease of implementation.  For example, it may be easier to change the
 extensions in the ServerHello than to switch the certificate chain, or
 alternately it may be easier to simply let the server operator provide
-a whole chain terminating in the sub-certificate, depending on how much
+a whole chain terminating in the credential, depending on how much
 sanity checking the server does.
 
 
 ## Option 1a. Name Constraints
 
-It would be consistent with the requirements above to realize sub-certificates
-by having the CA issue a subordinate CA certificate to the TLS server operator,
-with a nameConstraints extension encoding the names the server operator is
-authorized for.  Then the sub-certificates would simply be normal end-entity
-certificates issued under this subordinate.
+It would be consistent with the requirements above to realize credentials as
+sub-certificates by having the CA issue a subordinate CA certificate to the
+TLS server operator, with a nameConstraints extension encoding the names the
+server operator is authorized for.  Then the credentials would simply be
+normal end-entity certificates issued under this subordinate.
 
 In order for this solution to be safe the subordinate CA certificate needs to
 have a critical nameConstraints extension.  Historically, this solution has been
@@ -277,13 +286,10 @@ practices.
 
 It's important to note that this would not enable existing end-entity
 certificates to be used to issue sub-certificates.  That would create risks such
-as those noted in [Jager et al.].  So there would be a need to define some marker
+as those noted in [J\"{a}ger et al.].  So there would be a need to define some marker
 that would be inserted into an end-entity certificate to indicate that it could
-be used to issue sub-certificates.
-
-[[ Nick - Is this really an issue we want to engineer around? Requiring CAs to add
-a new X.509 extension and operators to re-issue all existing certificates will likely
-hamper the adoption of this draft. ]]
+be used to issue sub-certificates. It may be enough to require the certificate
+to not contain a keyEncipherment KeyUsage.
 
 Pro:
 
@@ -311,7 +317,7 @@ digitally-signed struct {
   uint64 notBefore;
   uint64 notAfter;
   SignatureScheme algorithm;
-  ServerNameList serverName;
+  ServerName serverName;
   opaque publicKey<0..2^24-1>;
 } DelegatedCredential;
 ~~~~~~~~~~
@@ -330,10 +336,6 @@ enum {
 } NameType;
 
 opaque HostName<1..2^16-1>;
-
-struct {
-  ServerName server_name_list<1..2^16-1>
-} ServerNameList;
 ~~~~~~~~~~
 
 This would avoid any mis-match in semantics with X.509, and would likely require
@@ -342,21 +344,14 @@ TLS stack, which has the advantage of avoiding changes to security-critical and
 often delicate PKI code (though of course moves that complexity to the TLS
 stack).
 
-By only allowing this signature to use TLS 1.3 signature schemes, we prevent cross
-protocol attacks such as those noted in [Jager et al.]. We could also avoid
-complicating the signature scheme selection logic by requiring the publicKey of
-the delegated credential to be the same size and format as the key in the leaf
-certificate.
-
 Pro:
 
 * No change to client certificate validation
 * No risk of conflict with X.509 semantics
-* No need to change or re-issue existing certificates
 
 Con:
 
-* Requires new logic for generating and verifying delegated credentials
+* Requires new logic for generating and verifying credentials
 * Requires changes to client CertificateVerify processing
 
 ## Re-Use of the Master Certificate
@@ -371,7 +366,7 @@ server operator need only have one certificate, but with the risk that if the
 TLS server is compromised the attacker could issue themselves an arbitrary
 number of sub-certificates. Conversely, the master certificate may be configured
 so that it is not directly usable, thus requiring the name-holder to get two
-certificates, one for signing delegated credentials and one for use in its TLS
+certificates, one for signing credentials and one for use in its TLS
 server. This adds additional complexity for the operator but allows the master
 certificate to be offline.
 
