@@ -1,5 +1,5 @@
 ---
-title: Sub-Certificates for TLS
+title: Delegated Credentials for TLS
 abbrev: 
 docname: draft-rescorla-tls-subcerts-latest
 category: std
@@ -28,6 +28,11 @@ author:
        name: Subodh Iyengar
        organization: Facebook
        email: subodh@fb.com
+-
+       ins: N. Sullivan
+       name: Nick Sullivan
+       organization: CloudFlare Inc.
+       email: nick@cloudflare.com
 
 
 
@@ -37,7 +42,7 @@ The organizational separation between the operator of a TLS server and the
 certificate authority that provides it credentials can cause problems, for
 example when it comes to reducing the lifetime of certificates or supporting new
 cryptographic algorithms.  This document describes a mechanism to allow TLS
-server operators to create their own delegation certificates without breaking
+server operators to create their own credential delegations without breaking
 compatibility with clients that do not support this specification.
 
 --- middle
@@ -61,12 +66,12 @@ makes it infeasible to rely on an external CA for such short-lived credentials.
 
 To remove these dependencies, this document proposes a limited delegation
 mechanism that allows a TLS server operator to issue its own credentials
-("sub-certificates") within the scope of a certificate issued by an external CA.
-Because the above problems do not relate to the CAs inherent function of
-validating possession of names, it is safe to make such delegations as long as
-they only enable the recipient of the delegation to speak for names that the CA
-has authorized.  For clarity, we will refer to the certificate issued by the
-CA as a "master certificate" and the one issued by the operator as a "sub-certificate".
+within the scope of a certificate issued by an external CA. Because the above
+problems do not relate to the CAs inherent function of validating possession of
+names, it is safe to make such delegations as long as they only enable the recipient
+of the delegation to speak for names that the CA has authorized.  For clarity,
+we will refer to the certificate issued by the CA as a "certificate" and the one
+issued by the operator as a "delegated credential".
 
 [[ Ed. - We use the phrase "credential" for the sub-certificates since it's an
 open issue whether they will be certificates or not. ]]
@@ -80,41 +85,55 @@ for the WG to ultimately settle on one solution to this problem.  However, to
 
 # Solution Overview
 
-A sub-certificate is a digitally signed data structure with the following
+A delegated credential is a digitally signed data structure with the following
 semantic fields:
 
 * A validity interval
 * A public key (with its associated algorithm)
+* A list of valid server names
 
-[[ OPEN ISSUE - Should it be possible to restrict a sub-certificate to a subset
-of the names in the master certificate?  We currently assume that all names are
-inherited. ]]
+The signature on the credential indicates a delegation from the certificate which
+is issued to the TLS server operator. The key pair used to sign a credential is
+presumed to be one whose public key is contained in an X.509 certificate that
+associates one or more names to the credential.
 
-The signature on the sub-certificate indicates a delegation from the
-master certificate which is issued to the TLS server operator. The key pair used
-to sign a sub-certificate is presumed to be one whose public key is
-contained in an X.509 certificate that associates one or more names to
-the sub-certificate signing key.
-
-A TLS handshake that uses sub-certificates differs from a normal handshake in a
-few important ways:
+A TLS handshake that uses credentials differs from a normal handshake
+in a few important ways:
 
 * The client provides an extension in its ClientHello that indicates support for
   this mechanism
-* The server provides both the certificate chain terminating in its master
-  certificate as well as the sub-certificate.
-* The client uses information in the server's master certificate to verify the
-  signature on the sub-certificate and verify that the server is asserting an
+* The server provides both the certificate chain terminating in its certificate
+  as well as the credential.
+* The client uses information in the server's certificate to verify the
+  signature on the credential and verify that the server is asserting an
   expected identity.
-* The client uses the public key in the sub-certificate as the server's
+* The client uses the public key in the credential as the server's
   working key for the TLS handshake.
+* The client uses the list of valid server names in the credential to
+  verify that the credential is valid for the server.
 
-The sub-certificate signature is subject to the negotiated signature algorithms.
-A sub-certificate cannot be used if the client advertises support for sub-certificate
-however a server does not have a master certificate which is compatible with any of  
+The credential signature is subject to the negotiated signature algorithms.
+A credential cannot be used if the client advertises support for credentials
+however a server does not have a certificate which is compatible with any of
 the negotiated signature algorithms.
 
-[[ Ed. - The specifics of how sub-certificates are structured and provided by the
+It was noted by [J\"{a}ger et al.] that certificates in use by servers that
+support outdated protocols such as SSLv2 can be used to forge signatures for
+certificates that contain the keyEncipherment KeyUsage [[RFC5280 section 4.2.1.3]]
+In order to prevent this type of cross-protocol attack, clients MUST NOT accept
+connections from certificates with the keyEncipherment KeyUsage.
+
+[[ Nick - This is a much less stringent requirement than a new flag, since it means
+that all existing ECDSA certificates can be re-used.]]
+
+Credentials allow the server to terminate TLS connections on behalf of the
+certificate owner. If a credential is stolen, there is no mechanism for revoking
+it without revoking the certificate itself.  To limit the exposure of a delegation
+credential compromise, servers MUST NOT issue credentials with a validity period
+longer than 7 days. Clients MUST NOT accept credentials with longer validity
+periods. [[ TODO: which alert should the client send? ]]
+
+[[ Ed. - The specifics of how credentials are structured and provided by the
 server are still to be determined; see below. ]]
 
 
@@ -122,7 +141,7 @@ server are still to be determined; see below. ]]
 # Related Work
 
 
-Many of the use cases for sub-certificates can also be addressed using purely
+Many of the use cases for delegated credentials can also be addressed using purely
 server-side mechanisms that do not require changes to client behavior (e.g.,
 LURK {{?I-D.mglt-lurk-tls-requirements}}).  These mechanisms, however, incur
 per-transaction latency, since the front-end server has to interact with a
@@ -143,10 +162,10 @@ Client            Front-End            Back-End
   |        ...        |                    |
 
 
-Sub-certificates:
+Delegated credentials:
 
 Client            Front-End            Back-End
-  |                   |<---Sub-Cert Prov---|
+  |                   |<---Cred Provision--|
   |----ClientHello--->|                    |
   |<---ServerHello----|                    |
   |<---Certificate----|                    |
@@ -154,7 +173,7 @@ Client            Front-End            Back-End
 ~~~~~~~~~~
 
 These two classes of mechanism can be complementary.  A server could use
-sub-certificates for clients that support them, while using LURK to support
+credentials for clients that support them, while using LURK to support
 legacy clients.
 
 It is possible to address the short-lived certificate concerns above by
@@ -163,8 +182,8 @@ In addition to requiring frequent operationally-critical interactions with an
 external party, this makes the server operator dependent on the CA's willingness
 to issue certificates with sufficiently short lifetimes.  It also fails to
 address the issues with algorithm support.  Nonetheless, existing automated
-issuance APIs like ACME may be useful for provisioning sub-certificates, within
-an operator network.
+issuance APIs like ACME may be useful for provisioning credentials,
+within an operator network.
 
 # Client Behavior
 
@@ -173,66 +192,72 @@ This document defines the following extension code point.
 ~~~~~~~~~~
     enum {
       ...
-      supports_sub_certificate(TBD),
+      delegated_credential(TBD),
       (65535)
     } ExtensionType;
 ~~~~~~~~~~
 
-A client which supports this document SHALL send an empty "supports_sub_certificate"
-extension in its ClientHello. A server MUST NOT send this extension. If the extension
-is present, the server MAY send a sub-certificate.  If the extension is not
-present, the server MUST NOT send a sub-certificate.  A sub-certificate MUST NOT
-be provided unless a Certificate message is also sent.
+A client which supports this document SHALL send an empty "delegated_credential"
+extension in its ClientHello.
 
-On receiving a sub-certificate and a certificate chain, the client validates the
+[[Option 1]] A server MUST NOT send this extension.  If the extension
+is present, the server MAY send a credential.  If the extension is not
+present, the server MUST NOT send a credential.  A credential MUST NOT
+be provided unless a Certificate message is also sent.
+[[Option 2]] If the extension is present, the server MAY send a "delegated
+credential" extension containing the credential in the response. If the extension
+is not present, the server MUST NOT send a credential.  A credential
+MUST NOT be provided unless a Certificate message is also sent.
+
+On receiving a credential and a certificate chain, the client validates the
 certificate chain and matches the end-entity certificate to the server's
 expected identity following its normal procedures.  It then takes the following
 additional steps:
 
 * Verify that the current time is within the validity interval of the
-  sub-certificate
+  credential
+* Verify that the server name is included in the credential
 * Use the public key in the server's end-entity certificate to verify the
-  signature on the sub-certificate
-* Use the public key in the sub-certificate to verify the CertificateVerify
+  signature on the credential
+* Use the public key in the credential to verify the CertificateVerify
   message provided in the handshake
 
 [[ Ed. - This will need to be updated if the sub-certificate can be restricted
 to a subset of the names in the master certificate. ]]
 
-# Sub-Certificates
+# Delegated Credentials
 
 [[ Ed. - This section is currently a sketch, intended to lay out the design
 space to facilitate discussion ]]
 
-Sub-certificates obviously need to have some defined structure.  It is possible
+Credentials obviously need to have some defined structure.  It is possible
 to re-use X.509, but it may be better to define something new.
 
 The format question also mostly decides the question of how the
-sub-certificate will be signed and delivered to the client.  If the
-sub-certificate is an X.509 certificate, then it will be signed in
+credential will be signed and delivered to the client.  If the
+credential is an X.509 certificate, then it will be signed in
 that format, and probably provided in the TLS Certificate message as
 the end-entity certificate.  If some new structure is devised, then it
 will need to define a signature method, and it will probably make more
-sense to carry it as a new TLS certificate format {{?RFC6091}} or
-in a TLS extension.
+sense to carry it in a TLS extension.
 
 The delivery mechanism is mostly a trivial question, but given that the server
 is switching between a normal certificate chain and one including a
-sub-certificate based on a ClientHello extension, there could be some impact on
+credential based on a ClientHello extension, there could be some impact on
 the ease of implementation.  For example, it may be easier to change the
 extensions in the ServerHello than to switch the certificate chain, or
 alternately it may be easier to simply let the server operator provide
-a whole chain terminating in the sub-certificate, depending on how much
+a whole chain terminating in the credential, depending on how much
 sanity checking the server does.
 
 
 ## Option 1a. Name Constraints
 
-It would be consistent with the requirements above to realize sub-certificates
-by having the CA issue a subordinate CA certificate to the TLS server operator,
-with a nameConstraints extension encoding the names the server operator is
-authorized for.  Then the sub-certificates would simply be normal end-entity
-certificates issued under this subordinate.
+It would be consistent with the requirements above to realize credentials as
+sub-certificates by having the CA issue a subordinate CA certificate to the
+TLS server operator, with a nameConstraints extension encoding the names the
+server operator is authorized for.  Then the credentials would simply be
+normal end-entity certificates issued under this subordinate.
 
 In order for this solution to be safe the subordinate CA certificate needs to
 have a critical nameConstraints extension.  Historically, this solution has been
@@ -261,9 +286,10 @@ practices.
 
 It's important to note that this would not enable existing end-entity
 certificates to be used to issue sub-certificates.  That would create risks such
-as those noted in [Jager et al.].  So there would be a need to define some marker
+as those noted in [J\"{a}ger et al.].  So there would be a need to define some marker
 that would be inserted into an end-entity certificate to indicate that it could
-be used to issue sub-certificates.
+be used to issue sub-certificates. It may be enough to require the certificate
+to not contain a keyEncipherment KeyUsage.
 
 Pro:
 
@@ -280,18 +306,36 @@ Con:
 ## Option 2. Define a New Structure
 
 While X.509 forbids end-entity certificates from being used as issuers for other
-certificates, it is perfectly fine to use them to issue other signed objects.
-We could define a new signed object format that would encode only the semantics
-that are needed for this application.  For example, the TLS `digitally-signed`
-structure could be used:
+certificates, it is perfectly fine to use them to issue other signed objects as
+long as the certificate contains the digitalSignature key usage (RFC5280 section
+4.2.1.3). We could define a new signed object format that would encode only the
+semantics that are needed for this application.  For example, the TLS
+`digitally-signed` structure could be used:
 
 ~~~~~~~~~~
 digitally-signed struct {
   uint64 notBefore;
   uint64 notAfter;
   SignatureScheme algorithm;
+  ServerName serverName;
   opaque publicKey<0..2^24-1>;
-} SubCertificate;
+} DelegatedCredential;
+~~~~~~~~~~
+
+The ServerNameList can be defined as follows (similar to RFC 6066 section 3):
+~~~~~~~~~~
+struct {
+  NameType name_type;
+  select (name_type) {
+    case host_name: HostName;
+  } name;
+} ServerName;
+
+enum {
+  host_name(0), (255)
+} NameType;
+
+opaque HostName<1..2^16-1>;
 ~~~~~~~~~~
 
 This would avoid any mis-match in semantics with X.509, and would likely require
@@ -300,13 +344,6 @@ TLS stack, which has the advantage of avoiding changes to security-critical and
 often delicate PKI code (though of course moves that complexity to the TLS
 stack).
 
-[[ OPEN ISSUE: If we use this syntax, how would you represent non-signature
-keys? ]]
-
-As in the above case, there would be a need for a special marker in the
-master certificate that declares that the key pair can be used to issue
-sub-certificates.
-
 Pro:
 
 * No change to client certificate validation
@@ -314,15 +351,14 @@ Pro:
 
 Con:
 
-* Requires new logic for generating and verifying sub-certificates
+* Requires new logic for generating and verifying credentials
 * Requires changes to client CertificateVerify processing
-* Requires marker in end-entity certificate (as above)
 
 ## Re-Use of the Master Certificate
 
 [[ OPEN ISSUE ]]
 
-The master certificate can be configured so that it is usable directly as a TLS
+The certificate can be configured so that it is usable directly as a TLS
 end-entity certificate (this is the natural design for Option 2) or alternately
 can be configured so that it is not acceptable as a TLS server certificate but
 rather can only be used for signing sub-certificates. In the former case, the
@@ -330,7 +366,7 @@ server operator need only have one certificate, but with the risk that if the
 TLS server is compromised the attacker could issue themselves an arbitrary
 number of sub-certificates. Conversely, the master certificate may be configured
 so that it is not directly usable, thus requiring the name-holder to get two
-certificates, one for signing sub-certificates and one for use in its TLS
+certificates, one for signing credentials and one for use in its TLS
 server. This adds additional complexity for the operator but allows the master
 certificate to be offline.
 
