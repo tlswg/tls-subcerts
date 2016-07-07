@@ -28,7 +28,7 @@ author:
        name: Subodh Iyengar
        organization: Facebook
        email: subodh@fb.com
--
+ -
        ins: N. Sullivan
        name: Nick Sullivan
        organization: CloudFlare Inc.
@@ -77,11 +77,10 @@ issued by the operator as a "delegated credential".
 open issue whether they will be certificates or not. ]]
 
 [[ Ed. - This document is framed as a single solution, because it would be best
-for the WG to ultimately settle on one solution to this problem.  However, to
+  for the WG to ultimately settle on one solution to this problem.  However, to
   facilitate discussion, we outline several possible options for how
-  sub-certificate can be realized (see {{sub-certificates}}).  Once the WG agrees
-  on an overall approach, this draft will be revised to provide more details of
-  that approach. ]]
+  credential can be realized.  Once the WG agrees on an overall approach, this
+  draft will be revised to provide more details of that approach. ]]
 
 # Solution Overview
 
