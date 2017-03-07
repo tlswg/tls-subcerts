@@ -99,19 +99,15 @@ in a few important ways:
 * The client uses the public key in the credential as the server's
   working key for the TLS handshake.
 
-The credential's signature is subject to the negotiated signature algorithms.
-A credential cannot be used if the client advertises support for credentials
-however a server does not have a certificate which is compatible with any of
-the negotiated signature algorithms.
+Delegated credentials can be used either in TLS 1.3 or TLS 1.2. Differences between
+the use of Delegated credentials in the protocols are explictly stated.
 
 It was noted by [J\"{a}ger et al.] that certificates in use by servers that
 support outdated protocols such as SSLv2 can be used to forge signatures for
 certificates that contain the keyEncipherment KeyUsage [[RFC5280 section 4.2.1.3]]
-In order to prevent this type of cross-protocol attack, clients MUST NOT accept
-connections from certificates with the keyEncipherment KeyUsage.
-
-[[ Nick - This is a much less stringent requirement than a new flag, since it means
-that all existing ECDSA certificates can be re-used.]]
+In order to prevent this type of cross-protocol attack, we define a new DelegationUsage
+extension to X.509 which permits use of delegated credentials. Clients MUST NOT accept
+delegated credentials associated with certificates without this extension.
 
 Credentials allow the server to terminate TLS connections on behalf of the
 certificate owner. If a credential is stolen, there is no mechanism for revoking
@@ -181,10 +177,22 @@ This document defines the following extension code point.
 A client which supports this document SHALL send an empty "delegated_credential"
 extension in its ClientHello.
 
-If the extension is present, the server MAY send a DelegatedCredential extension
-containing the credential in the response. If the extension
-is not present, the server MUST NOT send a credential.  A credential
-MUST NOT be provided unless a Certificate message is also sent.
+If the extension is present, the server MAY send a DelegatedCredential extension.
+If the extension is not present, the server MUST NOT send a credential.
+A credential MUST NOT be provided unless a Certificate message is also sent.
+
+When negotiating TLS 1.3, and using Delegated credentials, the server MUST
+send the DelegatedCredential as an extension in the CertificateEntry
+of its end entity certificate. When negotiating TLS 1.2, the DelegatedCredential
+MUST be sent as an extension in the ServerHello.
+
+The DelegatedCredential is a signed structure, containing a public key and is
+signed by the end-entity certificate. Both the credential's signature as well as
+the credential's public key are subject to the supported signature algorithms.
+A Delegated credential MUST NOT be negotiated by the server if its signature is not compatible
+with any of the supported signature algorithms or the credential's public key is
+not usable with the supported signature algorithms of the client, even if the client
+advertises support for delegated credentials.
 
 On receiving a credential and a certificate chain, the client validates the
 certificate chain and matches the end-entity certificate to the server's
@@ -206,35 +214,43 @@ While X.509 forbids end-entity certificates from being used as issuers for other
 certificates, it is perfectly fine to use them to issue other signed objects as
 long as the certificate contains the digitalSignature key usage (RFC5280 section
 4.2.1.3). We define a new signed object format that would encode only the
-semantics that are needed for this application.  The TLS `digitally-signed`
-structure is used:
+semantics that are needed for this application.
 
 ~~~~~~~~~~
-digitally-signed struct {
-  uint64 validTime;
-  SignatureSchemeList supported_signature_algorithms;
+struct {
+  uint32 validTime;
   opaque publicKey<0..2^24-1>;
+} DelegatedCredentialParams;
+
+struct {
+  DelegatedCredentialParams cred;
+  SignatureScheme scheme;
+  opaque signature<0..2^16-1>;
 } DelegatedCredential;
 ~~~~~~~~~~
 
-validTime: Relative time from the beginning of the certificate's notBefore value
-after which the Delegated Credential is no longer valid.
+validTime: Relative time in seconds from the beginning of the certificate's
+notBefore value after which the Delegated Credential is no longer valid.
 
-supported_signature_algorithms: The supported signature algorithms compatible
-with the publicKey. A server MUST NOT negotiate Delegated credentials if the
-neogtiated signature algorithm is not in the list.
+publicKey: The Delegated Credential's public key which is an encoded
+SubjectPublicKeyInfo {{!RFC5280}}.
 
-publicKey: The Delegated Credential's public key.
+scheme: The Signature algorithm and scheme used to sign the Delegated credential.
 
-The `digitally-signed` structure differs between TLS 1.3 and previous versions.
-For TLS 1.3 the SignatureAndHashAlgorithm is replaced with SignatureScheme.
+signature: The signature of the credential with the end-entity certificate's public key,
+using the scheme.
+
+The DelegatedCredential structure is similar to the CertificateVerify structure in
+TLS 1.3. Since the SignatureScheme defined in TLS 1.3, TLS 1.2 clients should translate
+the scheme into an appropriate group and signature algorithm to perform validation.
 
 The signature of the DelegatedCredential is computed as the concatenation of:
 
-* A string that consists of octet 42 (0x2A) repeated 64 times
+* A string that consists of octet 32 (0x20) repeated 64 times
+* The context string “TLS, server delegated credentials”
 * Big endian serialized 2 bytes ProtocolVersion of the TLS version defined by TLS
 * DER encoded X.509 certificate used to sign the DelegatedCredential.
-* The DelegatedCredential structure.
+* The DelegatedCredentialParams structure.
 
 This signature has a few desirable properties:
 
@@ -247,9 +263,8 @@ TLS stack, which has the advantage of avoiding changes to security-critical and
 often delicate PKI code (though of course moves that complexity to the TLS
 stack).
 
-An alternative mechanism to Delegated Credentials for TLS as defined here could be
-to adopt proxy certificates for use in TLS. Delegated credentials present a
-better alternative for several reasons:
+Delegated credentials present a better alternative from other delegation mechanisms like
+proxy certificates for several reasons:
 
 * There is no change needed to client certificate validation at the PKI layer which is
   complex.
@@ -272,7 +287,7 @@ better alternative for several reasons:
 We define an new X.509 extension, DelegationUsage to be used in the certificate when the
 certificate permits the usage of Delegated Credentials. When this extension is not present
 the client MUST not accept a Delegated Credential even if it is negotiated by the server.
-When it is present, the client SHOULD follow the validation procedure.
+When it is present, the client MUST follow the validation procedure.
 
   id-ce-delegationUsage OBJECT IDENTIFIER ::=  { TBD }
 
