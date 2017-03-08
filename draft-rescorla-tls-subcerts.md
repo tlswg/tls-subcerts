@@ -264,7 +264,7 @@ The signature of the DelegatedCredential is computed as the concatenation of:
 
 * A string that consists of octet 32 (0x20) repeated 64 times.
 * The context string "TLS, server delegated credentials".
-* Big endian serialized 2 bytes ProtocolVersion of the TLS version defined by TLS.
+* Big endian serialized 2 bytes ProtocolVersion of the negotiated TLS version, defined by TLS.
 * DER encoded X.509 certificate used to sign the DelegatedCredential.
 * Big endian serialized 2 byte SignatureScheme scheme.
 * The DelegatedCredentialParams structure.
@@ -288,7 +288,7 @@ proxy certificates for several reasons:
   creates a proxy cert where the properties differ from the leaf certificate.
   Delegated credentials have very restricted semantics which should not conflict
   with X.509 semantics.
-* Proxy certificates rely on the cert path building process to establish a binding between
+* Proxy certificates rely on the certificate path building process to establish a binding between
   the proxy certificate and the server certificate.  Since the cert path building process is
   not cryptographically protected, it is possible that a proxy certificate
   could be bound to another certificate with the same public key, with different X.509
