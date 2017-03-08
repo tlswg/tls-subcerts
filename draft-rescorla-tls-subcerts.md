@@ -283,7 +283,7 @@ stack).
 Delegated credentials present a better alternative from other delegation mechanisms like
 proxy certificates for several reasons:
 
-* There is no change needed to client certificate validation at the PKI layer.
+* There is no change needed to certificate validation at the PKI layer.
 * X.509 semantics are very rich.  This can cause unintended consequences if a service owner
   creates a proxy cert where the properties differ from the leaf certificate.
   Delegated credentials have very restricted semantics which should not conflict
