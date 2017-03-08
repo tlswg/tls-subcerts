@@ -34,6 +34,19 @@ author:
        organization: RTFM, Inc.
        email: ekr@rtfm.com
 
+informative:
+
+  XPROT:
+      title: On the Security of TLS 1.3 and QUIC Against Weaknesses in PKCS#1 v1.5 Encryption
+      author:
+      -
+        ins: T. Jager
+      -
+        ins: J. Schwenk
+      -
+        ins: J. Somorovsky
+      seriesinfo: Proceedings of the 22nd ACM SIGSAC Conference on Computer and Communications Security
+      date: 2015
 
 
 --- abstract
@@ -102,9 +115,9 @@ in a few important ways:
 Delegated credentials can be used either in TLS 1.3 or TLS 1.2.  Differences between
 the use of Delegated credentials in the protocols are explictly stated.
 
-It was noted by [J\"{a}ger et al.] that certificates in use by servers that
+It was noted in [XPROT] that certificates in use by servers that
 support outdated protocols such as SSLv2 can be used to forge signatures for
-certificates that contain the keyEncipherment KeyUsage [[RFC5280 section 4.2.1.3]]
+certificates that contain the keyEncipherment KeyUsage ({{!RFC5280}} section 4.2.1.3)
 In order to prevent this type of cross-protocol attack, we define a new DelegationUsage
 extension to X.509 which permits use of delegated credentials.  Clients MUST NOT accept
 delegated credentials associated with certificates without this extension.
@@ -114,7 +127,7 @@ certificate owner.  If a credential is stolen, there is no mechanism for revokin
 it without revoking the certificate itself.  To limit the exposure of a delegation
 credential compromise, servers MUST NOT issue credentials with a validity period
 longer than 7 days.  Clients MUST NOT accept credentials with longer validity
-periods. [[ TODO: which alert should the client send? ]]
+periods.
 
 # Related Work
 
@@ -207,6 +220,9 @@ additional steps:
   message provided in the handshake.
 * Verify that the certificate has the correct extensions that allow the use
   of Delegated credentials.
+
+Clients that receive Delegated credentials that are valid for more than 7 days
+MUST terminate the connection with an "illegal_parameter" alert.
 
 # Delegated Credentials
 
