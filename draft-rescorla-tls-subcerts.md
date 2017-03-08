@@ -14,11 +14,6 @@ pi: [toc, sortrefs, symrefs]
 
 author:
  -
-       ins: E. Rescorla
-       name: Eric Rescorla
-       organization: RTFM, Inc.
-       email: ekr@rtfm.com
- -
        ins: R. Barnes
        name: Richard Barnes
        organization: Mozilla
@@ -33,6 +28,11 @@ author:
        name: Nick Sullivan
        organization: CloudFlare Inc.
        email: nick@cloudflare.com
+ -
+       ins: E. Rescorla
+       name: Eric Rescorla
+       organization: RTFM, Inc.
+       email: ekr@rtfm.com
 
 
 
