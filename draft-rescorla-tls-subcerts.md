@@ -35,6 +35,7 @@ author:
        email: ekr@rtfm.com
 
 informative:
+  RFC3820:
 
   XPROT:
       title: On the Security of TLS 1.3 and QUIC Against Weaknesses in PKCS#1 v1.5 Encryption
@@ -281,7 +282,7 @@ often delicate PKI code (though of course moves that complexity to the TLS
 stack).
 
 Delegated credentials present a better alternative from other delegation mechanisms like
-proxy certificates for several reasons:
+proxy certificates {{RFC3820}} for several reasons:
 
 * There is no change needed to certificate validation at the PKI layer.
 * X.509 semantics are very rich.  This can cause unintended consequences if a service owner
