@@ -1,12 +1,12 @@
 ---
 title: Delegated Credentials for TLS
-abbrev: 
+abbrev:
 docname: draft-rescorla-tls-subcerts-latest
 category: std
 
 ipr: trust200902
 area: Security
-workgroup: 
+workgroup:
 keyword: Internet-Draft
 
 stand_alone: yes
@@ -130,9 +130,30 @@ credential compromise, servers MUST NOT issue credentials with a validity period
 longer than 7 days.  Clients MUST NOT accept credentials with longer validity
 periods.
 
-# Related Work
+## Rationale
 
-Many of the use cases for Delegated credentials can also be addressed using purely
+Delegated credentials present a better alternative from other delegation mechanisms like
+proxy certificates {{RFC3820}} for several reasons:
+
+* There is no change needed to certificate validation at the PKI layer.
+* X.509 semantics are very rich.  This can cause unintended consequences if a service owner
+  creates a proxy cert where the properties differ from the leaf certificate.
+  Delegated credentials have very restricted semantics which should not conflict
+  with X.509 semantics.
+* Proxy certificates rely on the certificate path building process to establish a binding between
+  the proxy certificate and the server certificate.  Since the cert path building process is
+  not cryptographically protected, it is possible that a proxy certificate
+  could be bound to another certificate with the same public key, with different X.509
+  parameters.  Delegated credentials, which rely on a cryptographic binding between
+  the entire certificate and the Delegated credential, cannot.
+* Delegated credentials allow signed messages to be bound to specific versions of TLS.  This
+  prevents them from being used for other protocols if a service owner allows multiple
+  versions of TLS.
+
+
+## Related Work
+
+Many of the use cases for delegated credentials can also be addressed using purely
 server-side mechanisms that do not require changes to client behavior (e.g.,
 LURK {{?I-D.mglt-lurk-tls-requirements}}).  These mechanisms, however, incur
 per-transaction latency, since the front-end server has to interact with a
@@ -175,6 +196,7 @@ to issue certificates with sufficiently short lifetimes.  It also fails to
 address the issues with algorithm support.  Nonetheless, existing automated
 issuance APIs like ACME may be useful for provisioning credentials,
 within an operator network.
+
 
 # Client and Server behavior
 
@@ -225,6 +247,7 @@ additional steps:
 Clients that receive Delegated credentials that are valid for more than 7 days
 MUST terminate the connection with an "illegal_parameter" alert.
 
+
 # Delegated Credentials
 
 While X.509 forbids end-entity certificates from being used as issuers for other
@@ -246,16 +269,24 @@ struct {
 } DelegatedCredential;
 ~~~~~~~~~~
 
-validTime: Relative time in seconds from the beginning of the certificate's
-notBefore value after which the Delegated Credential is no longer valid.
+validTime:
 
-publicKey: The Delegated Credential's public key which is an encoded
-SubjectPublicKeyInfo {{!RFC5280}}.
+: Relative time in seconds from the beginning of the certificate's notBefore
+  value after which the Delegated Credential is no longer valid.
 
-scheme: The Signature algorithm and scheme used to sign the Delegated credential.
+publicKey:
 
-signature: The signature over the credential with the end-entity certificate's public key,
-using the scheme.
+: The Delegated Credential's public key which is an encoded SubjectPublicKeyInfo
+  {{!RFC5280}}.
+
+scheme:
+
+: The Signature algorithm and scheme used to sign the Delegated credential.
+
+signature:
+
+: The signature over the credential with the end-entity certificate's public
+  key, using the scheme.
 
 The DelegatedCredential structure is similar to the CertificateVerify structure in
 TLS 1.3.  Since the SignatureScheme defined in TLS 1.3, TLS 1.2 clients should translate
@@ -263,12 +294,12 @@ the scheme into an appropriate group and signature algorithm to perform validati
 
 The signature of the DelegatedCredential is computed as the concatenation of:
 
-* A string that consists of octet 32 (0x20) repeated 64 times.
-* The context string "TLS, server delegated credentials".
-* Big endian serialized 2 bytes ProtocolVersion of the negotiated TLS version, defined by TLS.
-* DER encoded X.509 certificate used to sign the DelegatedCredential.
-* Big endian serialized 2 byte SignatureScheme scheme.
-* The DelegatedCredentialParams structure.
+1. A string that consists of octet 32 (0x20) repeated 64 times.
+2. The context string "TLS, server delegated credentials".
+3. Big endian serialized 2 bytes ProtocolVersion of the negotiated TLS version, defined by TLS.
+4. DER encoded X.509 certificate used to sign the DelegatedCredential.
+5. Big endian serialized 2 byte SignatureScheme scheme.
+6. The DelegatedCredentialParams structure.
 
 This signature has a few desirable properties:
 
@@ -281,23 +312,6 @@ TLS stack, which has the advantage of avoiding changes to security-critical and
 often delicate PKI code (though of course moves that complexity to the TLS
 stack).
 
-Delegated credentials present a better alternative from other delegation mechanisms like
-proxy certificates {{RFC3820}} for several reasons:
-
-* There is no change needed to certificate validation at the PKI layer.
-* X.509 semantics are very rich.  This can cause unintended consequences if a service owner
-  creates a proxy cert where the properties differ from the leaf certificate.
-  Delegated credentials have very restricted semantics which should not conflict
-  with X.509 semantics.
-* Proxy certificates rely on the certificate path building process to establish a binding between
-  the proxy certificate and the server certificate.  Since the cert path building process is
-  not cryptographically protected, it is possible that a proxy certificate
-  could be bound to another certificate with the same public key, with different X.509
-  parameters.  Delegated credentials, which rely on a cryptographic binding between
-  the entire certificate and the Delegated credential, cannot.
-* Delegated credentials allow signed messages to be bound to specific versions of TLS.  This
-  prevents them from being used for other protocols if a service owner allows multiple
-  versions of TLS.
 
 ## Certificate Requirements
 
@@ -313,6 +327,7 @@ When it is present, the client MUST follow the validation procedure.
 Conforming CAs MUST mark this extension as non-critical.  This would allow the certificate
 to be used by service owners for clients that do not support certificate delegation as well
 and not need to obtain two certificates.
+
 
 # IANA Considerations
 
