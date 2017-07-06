@@ -292,7 +292,7 @@ The DelegatedCredential structure is similar to the CertificateVerify structure 
 TLS 1.3.  Since the SignatureScheme defined in TLS 1.3, TLS 1.2 clients should translate
 the scheme into an appropriate group and signature algorithm to perform validation.
 
-The signature of the DelegatedCredential is computed as the concatenation of:
+The signature of the DelegatedCredential is computed over the concatenation of:
 
 1. A string that consists of octet 32 (0x20) repeated 64 times.
 2. The context string "TLS, server delegated credentials".
@@ -315,7 +315,7 @@ stack).
 
 ## Certificate Requirements
 
-We define an new X.509 extension, DelegationUsage to be used in the certificate when the
+We define a new X.509 extension, DelegationUsage to be used in the certificate when the
 certificate permits the usage of Delegated Credentials.  When this extension is not present
 the client MUST not accept a Delegated Credential even if it is negotiated by the server.
 When it is present, the client MUST follow the validation procedure.
