@@ -239,8 +239,9 @@ additional steps:
   credential.
 * Use the public key in the server's end-entity certificate to verify the
   signature on the credential.
-* Use the public key in the credential to verify the CertificateVerify
-  message provided in the handshake.
+* Use the public key in the credential to verify a signature provided
+  in the handshake. That is the CertificateVerify message in TLS 1.3
+  or ServerKeyExchange in 1.2.
 * Verify that the certificate has the correct extensions that allow the use
   of Delegated credentials.
 
