@@ -75,8 +75,15 @@ dependent on the CA for some aspects of its operations, for example:
 
 These dependencies cause problems in practice.  Server operators often want to
 create short-lived certificates for servers in low-trust zones such as CDNs or
-remote data centers.  The risk inherent in cross-organizational transactions
-makes it infeasible to rely on an external CA for such short-lived credentials.
+remote data centers.  This allows server opertors to limit the exposure of keys
+in cases that they do not realize a compromise has occurred.  The risk inherent
+in cross-organizational transactions makes it operationally infeasible to rely
+on an external CA for such short-lived credentials.  In contast to OCSP stapling,
+in which an operator could choose to talk to the CA frequently to obtain stapled
+responses, the risk is lower, because failure to fetch an OCSP stapled response
+results only in degraded performance, however failure to fetch a potentially large
+number of short lived certificates would result in the service not being available
+which creates greater operational risk.
 
 To remove these dependencies, this document proposes a limited delegation
 mechanism that allows a TLS server operator to issue its own credentials
@@ -297,10 +304,11 @@ The signature of the DelegatedCredential is computed over the concatenation of:
 
 1. A string that consists of octet 32 (0x20) repeated 64 times.
 2. The context string "TLS, server delegated credentials".
-3. Big endian serialized 2 bytes ProtocolVersion of the negotiated TLS version, defined by TLS.
-4. DER encoded X.509 certificate used to sign the DelegatedCredential.
-5. Big endian serialized 2 byte SignatureScheme scheme.
-6. The DelegatedCredentialParams structure.
+3. A single 0 byte which serves as the separator
+4. Big endian serialized 2 bytes ProtocolVersion of the negotiated TLS version, defined by TLS.
+5. DER encoded X.509 certificate used to sign the DelegatedCredential.
+6. Big endian serialized 2 byte SignatureScheme scheme.
+7. The DelegatedCredentialParams structure.
 
 This signature has a few desirable properties:
 
@@ -333,5 +341,37 @@ and not need to obtain two certificates.
 # IANA Considerations
 
 # Security Considerations
+
+## Security of delegated private key
+
+Delegated credentials limits the exposure of the TLS private key by limiting its validity.
+An attacker who compromises the private key of a delegated credential can act as a man in the middle
+until the delegate credential expires, however they cannot create new delegated credentials. Thus
+delegated credentials should not be used to send a delegation to an untrusted party, but is meant
+to be used between parties that have some trust relationship with each other.  The secrecy
+of the delegated private key is thus important and several access control mechanisms SHOULD be used
+to protect it such as file system controls, physical security or hardware security modules.
+
+
+## Revocation of delegated credentials
+
+Delegated credentials do not provide any additional form of early revocation. Since it is short lived,
+the expiry of the delegated credential would revoke the credential.  Revocation of the long term private
+key that signs the delegated credential also implictly revokes the delegated credential.
+
+
+## Privacy considerations
+
+Delegated credentials can be valid for 7 days and it is much easier for a service to create delegated
+credential than a certificate signed by a CA. A service could determine the client time and clock skew
+by creating several delegated credentials with different expiry timestamps and observing whether the
+client would accept it.  Client time could be unique and thus privacy sensitive clients, such as
+browsers in incognito mode, who do not trust the service might not want to advertise support for delegated
+credentials or limit the number of probes that a server can perform.
+
+# Acknowledgements
+
+Thanks to Kyle Nekritz, Anirudh Ramachandran, Benjamin Kaduk, Kazuho Oku, Daniel Kahn Gillmor for their
+discussions, ideas, and bugs they've found.
 
 --- back
