@@ -80,10 +80,10 @@ in cases that they do not realize a compromise has occurred.  The risk inherent
 in cross-organizational transactions makes it operationally infeasible to rely
 on an external CA for such short-lived credentials.  In contrast to OCSP
 stapling, in which an operator could choose to talk to the CA frequently to
-obtain stapled responses, the risk is lower, because failure to fetch an OCSP
-stapled response results only in degraded performance, however failure to fetch
-a potentially large number of short lived certificates would result in the
-service not being available which creates greater operational risk.
+obtain stapled responses, failure to fetch an OCSP stapled response results only
+in degraded performance, however failure to fetch a potentially large number of
+short lived certificates would result in the service not being available which
+creates greater operational risk.
 
 To remove these dependencies, this document proposes a limited delegation
 mechanism that allows a TLS server operator to issue its own credentials within
@@ -355,7 +355,7 @@ TBD
 
 ## Security of delegated private key
 
-Delegated credentials limits the exposure of the TLS private key by limiting
+Delegated credentials limit the exposure of the TLS private key by limiting
 its validity.  An attacker who compromises the private key of a delegated
 credential can act as a man in the middle until the delegate credential
 expires, however they cannot create new delegated credentials. Thus delegated
