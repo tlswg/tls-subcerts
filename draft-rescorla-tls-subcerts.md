@@ -75,7 +75,7 @@ dependent on the CA for some aspects of its operations, for example:
 
 These dependencies cause problems in practice.  Server operators often want to
 create short-lived certificates for servers in low-trust zones such as CDNs or
-remote data centers.  This allows server opertors to limit the exposure of keys
+remote data centers.  This allows server operators to limit the exposure of keys
 in cases that they do not realize a compromise has occurred.  The risk inherent
 in cross-organizational transactions makes it operationally infeasible to rely
 on an external CA for such short-lived credentials.  In contrast to OCSP
@@ -121,7 +121,7 @@ important ways:
   working key for the TLS handshake.
 
 Delegated credentials can be used either in TLS 1.3 or TLS 1.2.  Differences
-between the use of Delegated credentials in the protocols are explictly stated.
+between the use of Delegated credentials in the protocols are explicitly stated.
 
 It was noted in [XPROT] that certificates in use by servers that support
 outdated protocols such as SSLv2 can be used to forge signatures for
