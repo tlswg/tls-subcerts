@@ -3,7 +3,7 @@
 This is the working area for the Individual internet-draft, "Limited Certificate Delegation for TLS".
 
 * [Editor's copy](https://tlswg.github.io/tls-subcerts/)
-* [Individual Draft] (https://tools.ietf.org/html/draft-rescorla-tls-subcerts)
+* [Working Group Draft](https://tools.ietf.org/html/draft-ietf-tls-subcerts)
 
 
 ## Building the Draft
