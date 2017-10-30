@@ -1,7 +1,7 @@
 ---
 title: Delegated Credentials for TLS
 abbrev:
-docname: draft-rescorla-tls-subcerts-latest
+docname: draft-ietf-tls-subcerts-latest
 category: std
 
 ipr: trust200902
