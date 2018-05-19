@@ -78,12 +78,12 @@ create short-lived certificates for servers in low-trust zones such as CDNs or
 remote data centers.  This allows server operators to limit the exposure of keys
 in cases that they do not realize a compromise has occurred.  The risk inherent
 in cross-organizational transactions makes it operationally infeasible to rely
-on an external CA for such short-lived credentials.  In contrast to OCSP
-stapling, in which an operator could choose to talk to the CA frequently to
-obtain stapled responses, failure to fetch an OCSP stapled response results only
-in degraded performance, however failure to fetch a potentially large number of
-short lived certificates would result in the service not being available which
-creates greater operational risk.
+on an external CA for such short-lived credentials. In OCSP stapling, if an
+operator chooses to talk frequently to the CA to obtain stapled responses, then
+failure to fetch an OCSP stapled response results only in degraded performance.
+On the other hand, failure to fetch a potentially large number of short lived
+certificates would result in the service not being available which creates
+greater operational risk.
 
 To remove these dependencies, this document proposes a limited delegation
 mechanism that allows a TLS server operator to issue its own credentials within
@@ -102,9 +102,9 @@ semantic fields:
 * A validity interval
 * A public key (with its associated algorithm)
 
-The signature on the credential indicates a delegation from the certificate
-which is issued to the TLS server operator.  The key pair used to sign a
-credential is presumed to be one whose public key is contained in an X.509
+The signature on the credential indicates a delegation from the certificate that
+is issued to the TLS server operator. The secret key used to sign a credential
+is presumed to be one whose corresponding public key is contained in an X.509
 certificate that associates one or more names to the credential.
 
 A TLS handshake that uses credentials differs from a normal handshake in a few
@@ -127,7 +127,7 @@ It was noted in [XPROT] that certificates in use by servers that support
 outdated protocols such as SSLv2 can be used to forge signatures for
 certificates that contain the keyEncipherment KeyUsage ({{!RFC5280}} section
 4.2.1.3) In order to prevent this type of cross-protocol attack, we define a
-new DelegationUsage extension to X.509 which permits use of delegated
+new DelegationUsage extension to X.509 that permits use of delegated
 credentials.  Clients MUST NOT accept delegated credentials associated with
 certificates without this extension.
 
@@ -156,9 +156,9 @@ mechanisms like proxy certificates {{RFC3820}} for several reasons:
   the same public key, with different X.509 parameters.  Delegated credentials,
   which rely on a cryptographic binding between the entire certificate and the
   Delegated credential, cannot.
-* Delegated credentials allow signed messages to be bound to specific versions
-  of TLS.  This prevents them from being used for other protocols if a service
-  owner allows multiple versions of TLS.
+* Delegated credentials are bound to specific versions of TLS. This prevents
+  them from being used for other protocols if a service owner allows multiple
+  versions of TLS.
 
 
 ## Related Work
@@ -194,9 +194,8 @@ Client            Front-End            Back-End
   |<---CertVerify-----|                    |
 ~~~~~~~~~~
 
-These two classes of mechanism can be complementary.  A server could use
-credentials for clients that support them, while using LURK to support legacy
-clients.
+These two mechanisms can be complementary.  A server could use credentials for
+clients that support them, while using LURK to support legacy clients.
 
 It is possible to address the short-lived certificate concerns above by
 automating certificate issuance, e.g., with ACME {{?I-D.ietf-acme-acme}}.  In
@@ -245,21 +244,22 @@ credentials.
 
 On receiving a credential and a certificate chain, the client validates the
 certificate chain and matches the end-entity certificate to the server's
-expected identity following its normal procedures.  It then takes the following
+expected identity following its normal procedures. It then takes the following
 additional steps:
 
-* Verify that the current time is within the validity interval of the
-  credential.
+* Verify that the current time is within the validity interval of the credential
+  and that the credential's time to live is no more than 7 days.
 * Use the public key in the server's end-entity certificate to verify the
   signature on the credential.
 * Use the public key in the credential to verify a signature provided
   in the handshake. That is the CertificateVerify message in TLS 1.3 or
   ServerKeyExchange in 1.2.
-* Verify that the certificate has the correct extensions that allow the use
-  of Delegated credentials.
+* Verify that the certificate has the DelegationUsage extension, which permits
+  the use of Delegated credentials.
 
-Clients that receive Delegated credentials that are valid for more than 7 days
-MUST terminate the connection with an "illegal_parameter" alert.
+If one or more of these criteria are not met, then the Delegated credential is
+invalid. Clients that receive Delegated credentials that are invalid MUST
+terminate the connection with an "illegal_parameter" alert.
 
 
 # Delegated Credentials
@@ -342,7 +342,7 @@ the validation procedure.
 
   DelegationUsage ::= BIT STRING { allowed (0) }
 
-Conforming CAs MUST mark this extension as non-critical.  This would allow the
+Conforming CAs MUST mark this extension as non-critical. This allows the
 certificate to be used by service owners for clients that do not support
 certificate delegation as well and not need to obtain two certificates.
 
