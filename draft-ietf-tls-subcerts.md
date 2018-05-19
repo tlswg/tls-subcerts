@@ -244,21 +244,22 @@ credentials.
 
 On receiving a credential and a certificate chain, the client validates the
 certificate chain and matches the end-entity certificate to the server's
-expected identity following its normal procedures.  It then takes the following
+expected identity following its normal procedures. It then takes the following
 additional steps:
 
-* Verify that the current time is within the validity interval of the
-  credential.
+* Verify that the current time is within the validity interval of the credential
+  and that the credential's time to live is no more than 7 days.
 * Use the public key in the server's end-entity certificate to verify the
   signature on the credential.
 * Use the public key in the credential to verify a signature provided
   in the handshake. That is the CertificateVerify message in TLS 1.3 or
   ServerKeyExchange in 1.2.
-* Verify that the certificate has the correct extensions that allow the use
-  of Delegated credentials.
+* Verify that the certificate has the DelegationUsage extension, which permits
+  the use of Delegated credentials.
 
-Clients that receive Delegated credentials that are valid for more than 7 days
-MUST terminate the connection with an "illegal_parameter" alert.
+If one or more of these criteria are not met, then the Delegated credential is
+invalid. Clients that receive Delegated credentials that are invalid MUST
+terminate the connection with an "illegal_parameter" alert.
 
 
 # Delegated Credentials
