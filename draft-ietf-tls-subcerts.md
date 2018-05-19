@@ -156,9 +156,9 @@ mechanisms like proxy certificates {{RFC3820}} for several reasons:
   the same public key, with different X.509 parameters.  Delegated credentials,
   which rely on a cryptographic binding between the entire certificate and the
   Delegated credential, cannot.
-* Delegated credentials allow signed messages to be bound to specific versions
-  of TLS.  This prevents them from being used for other protocols if a service
-  owner allows multiple versions of TLS.
+* Delegated credentials are bound to specific versions of TLS. This prevents
+  them from being used for other protocols if a service owner allows multiple
+  versions of TLS.
 
 
 ## Related Work
