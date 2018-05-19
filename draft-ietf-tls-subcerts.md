@@ -78,12 +78,12 @@ create short-lived certificates for servers in low-trust zones such as CDNs or
 remote data centers.  This allows server operators to limit the exposure of keys
 in cases that they do not realize a compromise has occurred.  The risk inherent
 in cross-organizational transactions makes it operationally infeasible to rely
-on an external CA for such short-lived credentials.  In contrast to OCSP
-stapling, in which an operator could choose to talk to the CA frequently to
-obtain stapled responses, failure to fetch an OCSP stapled response results only
-in degraded performance, however failure to fetch a potentially large number of
-short lived certificates would result in the service not being available which
-creates greater operational risk.
+on an external CA for such short-lived credentials. In OCSP stapling, if an
+operator chooses to talk frequently to the CA to obtain stapled responses, then
+failure to fetch an OCSP stapled response results only in degraded performance.
+On the other hand, failure to fetch a potentially large number of short lived
+certificates would result in the service not being available which creates
+greater operational risk.
 
 To remove these dependencies, this document proposes a limited delegation
 mechanism that allows a TLS server operator to issue its own credentials within
