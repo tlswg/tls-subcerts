@@ -102,9 +102,9 @@ semantic fields:
 * A validity interval
 * A public key (with its associated algorithm)
 
-The signature on the credential indicates a delegation from the certificate
-which is issued to the TLS server operator.  The key pair used to sign a
-credential is presumed to be one whose public key is contained in an X.509
+The signature on the credential indicates a delegation from the certificate that
+is issued to the TLS server operator. The secret key used to sign a credential
+is presumed to be one whose corresponding public key is contained in an X.509
 certificate that associates one or more names to the credential.
 
 A TLS handshake that uses credentials differs from a normal handshake in a few
@@ -127,7 +127,7 @@ It was noted in [XPROT] that certificates in use by servers that support
 outdated protocols such as SSLv2 can be used to forge signatures for
 certificates that contain the keyEncipherment KeyUsage ({{!RFC5280}} section
 4.2.1.3) In order to prevent this type of cross-protocol attack, we define a
-new DelegationUsage extension to X.509 which permits use of delegated
+new DelegationUsage extension to X.509 that permits use of delegated
 credentials.  Clients MUST NOT accept delegated credentials associated with
 certificates without this extension.
 
@@ -194,9 +194,8 @@ Client            Front-End            Back-End
   |<---CertVerify-----|                    |
 ~~~~~~~~~~
 
-These two classes of mechanism can be complementary.  A server could use
-credentials for clients that support them, while using LURK to support legacy
-clients.
+These two mechanisms can be complementary.  A server could use credentials for
+clients that support them, while using LURK to support legacy clients.
 
 It is possible to address the short-lived certificate concerns above by
 automating certificate issuance, e.g., with ACME {{?I-D.ietf-acme-acme}}.  In
@@ -342,7 +341,7 @@ the validation procedure.
 
   DelegationUsage ::= BIT STRING { allowed (0) }
 
-Conforming CAs MUST mark this extension as non-critical.  This would allow the
+Conforming CAs MUST mark this extension as non-critical. This allows the
 certificate to be used by service owners for clients that do not support
 certificate delegation as well and not need to obtain two certificates.
 
