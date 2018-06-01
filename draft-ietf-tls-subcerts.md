@@ -272,8 +272,8 @@ encode only the semantics that are needed for this application.
 
 ~~~~~~~~~~
 struct {
-  uint32 validTime;
-  opaque publicKey<0..2^16-1>;
+  uint32 valid_time;
+  opaque public_key<0..2^16-1>;
 } DelegatedCredentialParams;
 
 struct {
@@ -283,12 +283,12 @@ struct {
 } DelegatedCredential;
 ~~~~~~~~~~
 
-validTime:
+valid_time:
 
 : Relative time in seconds from the beginning of the certificate's notBefore
   value after which the delegated credential is no longer valid.
 
-publicKey:
+public_key:
 
 : The delegated credential's public key which is an encoded
   SubjectPublicKeyInfo {{!RFC5280}}.
@@ -303,7 +303,7 @@ signature:
   key, using the scheme.
 
 The DelegatedCredential structure is similar to the CertificateVerify structure
-in TLS 1.3.  Since the SignatureScheme defined in TLS 1.3, TLS 1.2 clients
+in TLS 1.3. Since the SignatureScheme defined in TLS 1.3, TLS 1.2 clients
 should translate the scheme into an appropriate group and signature algorithm
 to perform validation.
 
