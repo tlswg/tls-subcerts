@@ -295,7 +295,7 @@ public_key:
 
 scheme:
 
-: The Signature algorithm and scheme used to sign the delegated credential.
+: The signature algorithm used to sign the delegated credential.
 
 signature:
 
