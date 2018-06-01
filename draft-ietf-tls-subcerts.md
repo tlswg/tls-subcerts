@@ -140,7 +140,7 @@ longer validity periods.
 
 ## Rationale
 
-Delegated credentials present a better alternative from other delegation
+Delegated credentials present a better alternative than other delegation
 mechanisms like proxy certificates {{RFC3820}} for several reasons:
 
 * There is no change needed to certificate validation at the PKI layer.
@@ -187,7 +187,7 @@ Client            Front-End            Back-End
 Delegated credentials:
 
 Client            Front-End            Back-End
-  |                   |<---Cred Provision--|
+  |                   |<--Cred Provision-->|
   |----ClientHello--->|                    |
   |<---ServerHello----|                    |
   |<---Certificate----|                    |
@@ -245,7 +245,7 @@ credentials.
 On receiving a credential and a certificate chain, the client validates the
 certificate chain and matches the end-entity certificate to the server's
 expected identity following its normal procedures. It then takes the following
-additional steps:
+steps:
 
 * Verify that the current time is within the validity interval of the credential
   and that the credential's time to live is no more than 7 days.
@@ -253,7 +253,8 @@ additional steps:
   signature on the credential.
 * Use the public key in the credential to verify a signature provided
   in the handshake. That is the CertificateVerify message in TLS 1.3 or
-  ServerKeyExchange in 1.2.
+  ServerKeyExchange in 1.2. (These messages indicate the algorithm used to
+  verify the signature.)
 * Verify that the certificate has the DelegationUsage extension, which permits
   the use of delegated credentials.
 
@@ -290,7 +291,7 @@ valid_time:
 
 public_key:
 
-: The delegated credential's public key which is an encoded
+: The delegated credential's public key, which is an encoded
   SubjectPublicKeyInfo {{!RFC5280}}.
 
 scheme:
@@ -303,7 +304,7 @@ signature:
   key, using the scheme.
 
 The DelegatedCredential structure is similar to the CertificateVerify structure
-in TLS 1.3. Since the SignatureScheme defined in TLS 1.3, TLS 1.2 clients
+in TLS 1.3. Since the SignatureScheme is defined in TLS 1.3, TLS 1.2 clients
 should translate the scheme into an appropriate group and signature algorithm
 to perform validation.
 
@@ -311,7 +312,7 @@ The signature of the DelegatedCredential is computed over the concatenation of:
 
 1. A string that consists of octet 32 (0x20) repeated 64 times.
 2. The context string "TLS, server delegated credentials".
-3. A single 0 byte which serves as the separator
+3. A single 0 byte which serves as the separator.
 4. Big endian serialized 2 bytes ProtocolVersion of the negotiated TLS version,
    defined by TLS.
 5. DER encoded X.509 certificate used to sign the DelegatedCredential.
