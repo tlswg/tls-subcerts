@@ -275,10 +275,10 @@ encode only the semantics that are needed for this application.
 struct {
   uint32 valid_time;
   opaque public_key<0..2^16-1>;
-} DelegatedCredentialParams;
+} Credential;
 
 struct {
-  DelegatedCredentialParams cred;
+  Credential cred;
   SignatureScheme scheme;
   opaque signature<0..2^16-1>;
 } DelegatedCredential;
@@ -317,7 +317,7 @@ The signature of the DelegatedCredential is computed over the concatenation of:
    defined by TLS.
 5. DER encoded X.509 certificate used to sign the DelegatedCredential.
 6. Big endian serialized 2 byte SignatureScheme scheme.
-7. The DelegatedCredentialParams structure.
+7. The Credential structure.
 
 This signature has a few desirable properties:
 
