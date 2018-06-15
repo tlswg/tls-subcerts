@@ -227,10 +227,10 @@ extension.  If the extension is not present, the server MUST NOT send a
 credential.  A credential MUST NOT be provided unless a Certificate message is
 also sent.
 
-When negotiating TLS 1.3, and using delegated credentials, the server MUST send
-the DelegatedCredential as an extension in the CertificateEntry of its end
-entity certificate.  When negotiating TLS 1.2, the DelegatedCredential MUST be
-sent as an extension in the ServerHello.
+When negotiating TLS 1.3, and using Delegated credentials, the server MUST send
+the DelegatedCredential as an extension in the CertificateEntry of its
+end-entity certificate.  When negotiating TLS 1.2, the DelegatedCredential MUST
+be sent as an extension in the ServerHello.
 
 The DelegatedCredential contains a signature from the public key in the
 end-entity certificate using a signature algorithm advertised by the client in
@@ -249,18 +249,17 @@ steps:
 
 * Verify that the current time is within the validity interval of the credential
   and that the credential's time to live is no more than 7 days.
+* Verify that the certificate has the DelegationUsage extension, which permits
+  the use of Delegated credentials.
 * Use the public key in the server's end-entity certificate to verify the
   signature on the credential.
-* Use the public key in the credential to verify a signature provided
-  in the handshake. That is the CertificateVerify message in TLS 1.3 or
-  ServerKeyExchange in 1.2. (These messages indicate the algorithm used to
-  verify the signature.)
-* Verify that the certificate has the DelegationUsage extension, which permits
-  the use of delegated credentials.
 
-If one or more of these criteria are not met, then the delegated credential is
-invalid. Clients that receive delegated credentials that are invalid MUST
-terminate the connection with an "illegal_parameter" alert.
+If one or more of these checks fail, then the delegated credential is deemed
+invalid.  Clients that receive invalid delegated credentials MUST terminate the
+connection with an "illegal_parameter" alert. If successful, the client uses the
+public key in the credential to verify a signature provided in the handshake: in
+particular, the CertificateVerify message in TLS 1.3 and the ServerKeyExchange
+in 1.2.
 
 
 # Delegated Credentials
