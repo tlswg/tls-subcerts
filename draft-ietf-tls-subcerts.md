@@ -336,7 +336,7 @@ complexity to the TLS stack).
 
 ## Certificate Requirements
 
-We define a new X.509 extension, DelegationUsage to be used in the certificate
+We define a new X.509 extension, DelegationUsage, to be used in the certificate
 when the certificate permits the usage of delegated credentials.
 
 ~~~~~~~~~~
@@ -349,7 +349,12 @@ certificate to be used by service owners for clients that do not support
 certificate delegation as well and not need to obtain two certificates.
 
 The client MUST NOT accept a delegated credential unless the server's end-entity
-certificate has the DelegationUsage extension.
+certificate satisfies the following criteria:
+
+* It has the DelegationUsage extension.
+* It has the digitalSignature key usage enabled (see the Keyusage type in
+  {{RFC5280}}), but has the keyEncipherment and dataEncipherment usages are
+  disabled.
 
 # IANA Considerations
 
