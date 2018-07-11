@@ -212,11 +212,11 @@ within an operator network.
 This document defines the following extension code point.
 
 ~~~~~~~~~~
-    enum {
-      ...
-      delegated_credential(TBD),
-      (65535)
-    } ExtensionType;
+   enum {
+     ...
+     delegated_credential(TBD),
+     (65535)
+   } ExtensionType;
 ~~~~~~~~~~
 
 A client which supports this document SHALL send an empty
@@ -275,16 +275,16 @@ objects as long as the certificate contains the digitalSignature key usage
 encode only the semantics that are needed for this application.
 
 ~~~~~~~~~~
-struct {
-  uint32 valid_time;
-  opaque public_key<0..2^16-1>;
-} Credential;
+   struct {
+     uint32 valid_time;
+     opaque public_key<0..2^16-1>;
+   } Credential;
 
-struct {
-  Credential cred;
-  SignatureScheme scheme;
-  opaque signature<0..2^16-1>;
-} DelegatedCredential;
+   struct {
+     Credential cred;
+     SignatureScheme scheme;
+     opaque signature<0..2^16-1>;
+   } DelegatedCredential;
 ~~~~~~~~~~
 
 valid_time:
@@ -337,19 +337,19 @@ complexity to the TLS stack).
 ## Certificate Requirements
 
 We define a new X.509 extension, DelegationUsage to be used in the certificate
-when the certificate permits the usage of delegated credentials.  When this
-extension is not present the client MUST not accept a delegated credential even
-if it is negotiated by the server.  When it is present, the client MUST follow
-the validation procedure.
+when the certificate permits the usage of delegated credentials.
 
-  id-ce-delegationUsage OBJECT IDENTIFIER ::=  { TBD }
-
-  DelegationUsage ::= BIT STRING { allowed (0) }
+~~~~~~~~~~
+   id-ce-delegationUsage OBJECT IDENTIFIER ::=  { TBD }
+   DelegationUsage ::= BIT STRING { allowed (0) }
+~~~~~~~~~~
 
 Conforming CAs MUST mark this extension as non-critical. This allows the
 certificate to be used by service owners for clients that do not support
 certificate delegation as well and not need to obtain two certificates.
 
+The client MUST NOT accept a delegated credential unless the server's end-entity
+certificate has the DelegationUsage extension.
 
 # IANA Considerations
 
