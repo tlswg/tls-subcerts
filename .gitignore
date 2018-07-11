@@ -10,3 +10,4 @@ venv/
 issues.json
 lib
 draft-rescorla-tls-subcerts.md
+.targets.mk
