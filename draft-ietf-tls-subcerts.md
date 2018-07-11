@@ -253,10 +253,10 @@ steps:
 
 * Verify that the current time is within the validity interval of the credential
   and that the credential's time to live is no more than 7 days.
-* Verify that the certificate has the DelegationUsage extension, which permits
-  the use of delegated credentials.
+* Verify that the end-entity certificate satisfies the conditions specified in
+  Section {{certificate-requirements}}.
 * Use the public key in the server's end-entity certificate to verify the
-  signature on the credential.
+  signature of the credential.
 
 If one or more of these checks fail, then the delegated credential is deemed
 invalid.  Clients that receive invalid delegated credentials MUST terminate the
