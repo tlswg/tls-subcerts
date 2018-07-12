@@ -242,10 +242,11 @@ the credential's public key is not usable with the supported signature
 algorithms of the client, even if the client advertises support for delegated
 credentials.
 
-On receiving a credential and a certificate chain, the client validates the
-certificate chain and matches the end-entity certificate to the server's
-expected identity following its normal procedures. It then takes the following
-steps:
+The SignatureScheme the server selects in the "signature_algorithms" extension
+MUST be that of the credential public key.  On receiving a credential and a
+certificate chain, the client validates the certificate chain and matches the
+end-entity certificate to the server's expected identity following its normal
+procedures. It then takes the following steps:
 
 * Verify that the current time is within the validity interval of the credential
   and that the credential's time to live is no more than 7 days.
@@ -295,7 +296,8 @@ public_key:
 
 scheme:
 
-: The signature algorithm used to sign the delegated credential.
+: The signature algorithm used to sign the delegated credential, where
+  SignatureScheme is as defined in the TLS 1.3 standard.
 
 signature:
 
@@ -311,18 +313,21 @@ The signature of the DelegatedCredential is computed over the concatenation of:
 
 1. A string that consists of octet 32 (0x20) repeated 64 times.
 2. The context string "TLS, server delegated credentials".
-3. A single 0 byte which serves as the separator.
-4. Big endian serialized 2 bytes ProtocolVersion of the negotiated TLS version,
-   defined by TLS.
-5. DER encoded X.509 certificate used to sign the DelegatedCredential.
-6. Big endian serialized 2 byte SignatureScheme scheme.
-7. The Credential structure.
+3. A single 0 byte, which serves as the separator.
+4. The DER-encoded X.509 end-entity certificate used to sign the
+   DelegatedCredential.
+5. The ProtocolVersion in which the delegated credential is to be used, where
+   ProtocolVersion is as defined in the TLS 1.3 standard.
+6. The SignatureScheme of Credential.public_key, the signature scheme used by
+   the server to sign the handshake.
+7. DelegatedCredential.scheme.
+8. DelegatedCredential.cred.
 
-This signature has a few desirable properties:
-
-* It is bound to the certificate that signed it.
-* It is bound to the protocol version that is negotiated.  This is intended to
-  avoid cross-protocol attacks with signing oracles.
+The signature effectively binds the credential to the parameters of the
+handshake in which it is used. In particular, it ensures that credentials are
+only used with the certificate, protocol, and signature algorithm chosen by the
+delegator.  Minimizing their semantics in this way is intended to mitigate thee
+risk of cross protocol attacks involving delegated credentials.
 
 The code changes to create and verify delegated credentials would be localized
 to the TLS stack, which has the advantage of avoiding changes to
