@@ -82,26 +82,23 @@ on an external CA for such short-lived credentials. In OCSP stapling, if an
 operator chooses to talk frequently to the CA to obtain stapled responses, then
 failure to fetch an OCSP stapled response results only in degraded performance.
 On the other hand, failure to fetch a potentially large number of short lived
-certificates would result in the service not being available which creates
+certificates would result in the service not being available, which creates
 greater operational risk.
 
 To remove these dependencies, this document proposes a limited delegation
 mechanism that allows a TLS server operator to issue its own credentials within
 the scope of a certificate issued by an external CA.  Because the above
-problems do not relate to the CAs inherent function of validating possession of
+problems do not relate to the CA's inherent function of validating possession of
 names, it is safe to make such delegations as long as they only enable the
 recipient of the delegation to speak for names that the CA has authorized.  For
-clarity, we will refer to the certificate issued by the CA as a "certificate"
-and the one issued by the operator as a "delegated credential".
+clarity, we will refer to the certificate issued by the CA as a "certificate",
+or "deleagation certificate", and the one issued by the operator as a "delegated
+credential".
 
 # Solution Overview
 
-A delegated credential is a digitally signed data structure with the following
-semantic fields:
-
-* A validity interval
-* A public key (with its associated algorithm)
-
+A delegated credential is a digitally signed data structure with two semantic
+fields: a validity interval, and a public key (with its associated algorithm).
 The signature on the credential indicates a delegation from the certificate that
 is issued to the TLS server operator. The secret key used to sign a credential
 is presumed to be one whose corresponding public key is contained in an X.509
@@ -131,10 +128,10 @@ new DelegationUsage extension to X.509 that permits use of delegated
 credentials.  Clients MUST NOT accept delegated credentials associated with
 certificates without this extension.
 
-Credentials allow the server to terminate TLS connections on behalf of the
-certificate owner.  If a credential is stolen, there is no mechanism for
-revoking it without revoking the certificate itself.  To limit the exposure of
-a delegation credential compromise, servers MUST NOT issue credentials with a
+Delegated credentials allow the server to terminate TLS connections on behalf of
+the certificate owner.  If a credential is stolen, there is no mechanism for
+revoking it without revoking the certificate itself.  To limit the exposure of a
+delegation credential compromise, servers MUST NOT issue credentials with a
 validity period longer than 7 days.  Clients MUST NOT accept credentials with
 longer validity periods.
 
@@ -146,9 +143,8 @@ mechanisms like proxy certificates {{RFC3820}} for several reasons:
 * There is no change needed to certificate validation at the PKI layer.
 * X.509 semantics are very rich.  This can cause unintended consequences if a
   service owner creates a proxy cert where the properties differ from the leaf
-  certificate.
-* Delegated credentials have very restricted semantics which should not
-  conflict with X.509 semantics.
+  certificate. For this reason, delegated credentials have very restricted
+  semantics which should not conflict with X.509 semantics.
 * Proxy certificates rely on the certificate path building process to establish
   a binding between the proxy certificate and the server certificate.  Since
   the cert path building process is not cryptographically protected, it is
@@ -187,7 +183,7 @@ Client            Front-End            Back-End
 Delegated credentials:
 
 Client            Front-End            Back-End
-  |                   |<--Cred Provision-->|
+  |                   |<----DC minting---->|
   |----ClientHello--->|                    |
   |<---ServerHello----|                    |
   |<---Certificate----|                    |
