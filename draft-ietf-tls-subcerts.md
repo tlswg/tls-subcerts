@@ -92,7 +92,7 @@ problems do not relate to the CA's inherent function of validating possession of
 names, it is safe to make such delegations as long as they only enable the
 recipient of the delegation to speak for names that the CA has authorized.  For
 clarity, we will refer to the certificate issued by the CA as a "certificate",
-or "deleagation certificate", and the one issued by the operator as a "delegated
+or "delegation certificate", and the one issued by the operator as a "delegated
 credential".
 
 # Solution Overview
@@ -269,30 +269,47 @@ While X.509 forbids end-entity certificates from being used as issuers for
 other certificates, it is perfectly fine to use them to issue other signed
 objects as long as the certificate contains the digitalSignature key usage
 (RFC5280 section 4.2.1.3).  We define a new signed object format that would
-encode only the semantics that are needed for this application.
+encode only the semantics that are needed for this application. The credential
+has the following structure:
 
 ~~~~~~~~~~
    struct {
      uint32 valid_time;
+     SignatureScheme scheme;
+     ProtocolVersion version;
      opaque public_key<0..2^16-1>;
    } Credential;
+~~~~~~~~~~
 
+valid_time:
+
+: Relative time in seconds from the beginning of the delegation certificate's
+  notBefore value after which the delegated credential is no longer valid.
+
+scheme:
+
+: The signature algorithm of the credential key pair, where the type SignatureScheme is
+  as defined in the TLS 1.3 standard.
+
+version:
+
+: The version of TLS in which the credential will be used, where the type
+  ProtocolVersion is as defined in TLS 1.3.
+
+public_key:
+
+: The delegated credential's public key, which is an encoded
+  SubjectPublicKeyInfo {{!RFC5280}}.
+
+The delegated credential has the following structure:
+
+~~~~~~~~~~
    struct {
      Credential cred;
      SignatureScheme scheme;
      opaque signature<0..2^16-1>;
    } DelegatedCredential;
 ~~~~~~~~~~
-
-valid_time:
-
-: Relative time in seconds from the beginning of the certificate's notBefore
-  value after which the delegated credential is no longer valid.
-
-public_key:
-
-: The delegated credential's public key, which is an encoded
-  SubjectPublicKeyInfo {{!RFC5280}}.
 
 scheme:
 
@@ -316,12 +333,8 @@ The signature of the DelegatedCredential is computed over the concatenation of:
 3. A single 0 byte, which serves as the separator.
 4. The DER-encoded X.509 end-entity certificate used to sign the
    DelegatedCredential.
-5. The ProtocolVersion in which the delegated credential is to be used, where
-   ProtocolVersion is as defined in the TLS 1.3 standard.
-6. The SignatureScheme of Credential.public_key, the signature scheme used by
-   the server to sign the handshake.
-7. DelegatedCredential.scheme.
-8. DelegatedCredential.cred.
+5. DelegatedCredential.cred.
+6. DelegatedCredential.scheme.
 
 The signature effectively binds the credential to the parameters of the
 handshake in which it is used. In particular, it ensures that credentials are
