@@ -117,8 +117,8 @@ important ways:
 * The client uses the public key in the credential as the server's
   working key for the TLS handshake.
 
-Delegated credentials can be used either in TLS 1.3 or TLS 1.2.  Differences
-between the use of delegated credentials in the protocols are explicitly stated.
+This document specifies the use of delegated credentials in TLS 1.3 or later;
+their use in prior versions of the protocol is explicitly disallowed.
 
 It was noted in [XPROT] that certificates in use by servers that support
 outdated protocols such as SSLv2 can be used to forge signatures for
@@ -223,14 +223,12 @@ an "unexpected_message" alert.
 If the extension is present, the server MAY send a delegated credential
 extension; if the extension is not present, the server MUST NOT send a delegated
 credential.  A delegated credential MUST NOT be provided unless a Certificate
-message is also sent.  The server MUST ignore the extension unless TLS 1.2 or
+message is also sent. The server MUST ignore the extension unless TLS 1.3 or
 later is negotiated.
 
-When negotiating TLS 1.3, the server MUST send the delegated credential as an
-extension in the CertificateEntry of its end-entity certificate; the client
-SHOULD ignore delegated credentials sent as extensions to any other certificate.
-When negotiating TLS 1.2, the delegated credential MUST be sent as an extension
-in the ServerHello.
+The server MUST send the delegated credential as an extension in the
+CertificateEntry of its end-entity certificate; the client SHOULD ignore
+delegated credentials sent as extensions to any other certificate.
 
 The delegated credential contains a signature from the public key in the
 end-entity certificate using a signature algorithm advertised by the client in
@@ -258,9 +256,8 @@ procedures. It then takes the following steps:
 If one or more of these checks fail, then the delegated credential is deemed
 invalid.  Clients that receive invalid delegated credentials MUST terminate the
 connection with an "illegal_parameter" alert. If successful, the client uses the
-public key in the credential to verify the signature provided in the handshake: in
-particular, the CertificateVerify message in TLS 1.3 and the ServerKeyExchange
-in 1.2.
+public key in the credential to verify the signature in the serer's
+CertificateVerify message.
 
 
 # Delegated Credentials
@@ -320,11 +317,6 @@ signature:
 
 : The signature over the credential with the end-entity certificate's public
   key, using the scheme.
-
-The DelegatedCredential structure is similar to the CertificateVerify structure
-in TLS 1.3. Since the SignatureScheme is defined in TLS 1.3, TLS 1.2 clients
-should translate the scheme into an appropriate group and signature algorithm
-to perform validation.
 
 The signature of the DelegatedCredential is computed over the concatenation of:
 
