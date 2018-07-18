@@ -217,20 +217,20 @@ This document defines the following extension code point.
 
 A client which supports this document SHALL send an empty
 "delegated_credential" extension in its ClientHello.  If the client receives a
-delegated credential without indicating support, then the client SHOULD abort with
+delegated credential without indicating support, then the client MUST abort with
 an "unexpected_message" alert.
 
 If the extension is present, the server MAY send a delegated credential
-extension.  If the extension is not present, the server MUST NOT send a
-credential.  A credential MUST NOT be provided unless a Certificate message is
-also sent.  The server MUST ignore the extension unless TLS 1.2 or later is
-negotiated.
+extension; if the extension is not present, the server MUST NOT send a delegated
+credential.  A delegated credential MUST NOT be provided unless a Certificate
+message is also sent.  The server MUST ignore the extension unless TLS 1.2 or
+later is negotiated.
 
-When negotiating TLS 1.3, and using delegated credentials, the server MUST send
-the delegated credential as an extension in the CertificateEntry of its
-end-entity certificate; the client SHOULD ignore delegated credentials sent as
-extensions with any other certificate. When negotiating TLS 1.2, the delegated
-credential MUST be sent as an extension in the ServerHello.
+When negotiating TLS 1.3, the server MUST send the delegated credential as an
+extension in the CertificateEntry of its end-entity certificate; the client
+SHOULD ignore delegated credentials sent as extensions to any other certificate.
+When negotiating TLS 1.2, the delegated credential MUST be sent as an extension
+in the ServerHello.
 
 The delegated credential contains a signature from the public key in the
 end-entity certificate using a signature algorithm advertised by the client in
@@ -347,7 +347,6 @@ to the TLS stack, which has the advantage of avoiding changes to
 security-critical and often delicate PKI code (though of course moves that
 complexity to the TLS stack).
 
-
 ## Certificate Requirements
 
 We define a new X.509 extension, DelegationUsage, to be used in the certificate
@@ -355,12 +354,8 @@ when the certificate permits the usage of delegated credentials.
 
 ~~~~~~~~~~
    id-ce-delegationUsage OBJECT IDENTIFIER ::=  { TBD }
-   DelegationUsage ::= BIT STRING { allowed (0) }
+   DelegationUsage ::= SEQUENCE { strict BOOLEAN }
 ~~~~~~~~~~
-
-Conforming CAs MUST mark this extension as non-critical. This allows the
-certificate to be used by service owners for clients that do not support
-certificate delegation as well and not need to obtain two certificates.
 
 The client MUST NOT accept a delegated credential unless the server's end-entity
 certificate satisfies the following criteria:
@@ -370,11 +365,30 @@ certificate satisfies the following criteria:
   {{RFC5280}}), but has the keyEncipherment and dataEncipherment usages are
   disabled.
 
+The extension MAY be marked crititcal. (See Section 4.2 of {{RFC5280}}.) If the
+strict boolean is set to true, then the server MUST use delegated credential in
+the handshake; if no delegated credential is offered, then the client MUST abort
+the handshake with an "illegal_parameter" alert.
+
+
 # IANA Considerations
 
 TBD
 
 # Security Considerations
+
+## Isolating the delegation private key
+
+Marking the delegation certificate's DelegationUsage extension non-critical
+allows the certificate to be used for clients that do not support delegated
+credentials. However, it may be desirable to ensure that the delegation
+certificate is only used in handshakes in which a delegated credential
+negotiated. It suffices to mark the extension crticial and set the strict
+boolean to true: if the client does not support delegated credentials, then it
+will abort the handshake if the certificate has the DelegationUsage extension
+(as per Section 4.2 of {{RFC5280}}); if the client indicates support, but the
+server does not offer a delegated credential, then the client will abort the
+handshake (as per {{certificate-requirements}}).
 
 ## Security of delegated private key
 
