@@ -220,19 +220,23 @@ This document defines the following extension code point.
 ~~~~~~~~~~
 
 A client which supports this document SHALL send an empty
-"delegated_credential" extension in its ClientHello.
+"delegated_credential" extension in its ClientHello.  If the client receives a
+delegated credential without indicating support, then the client SHOULD abort with
+an "unexpected_message" alert.
 
-If the extension is present, the server MAY send a DelegatedCredential
+If the extension is present, the server MAY send a delegated credential
 extension.  If the extension is not present, the server MUST NOT send a
 credential.  A credential MUST NOT be provided unless a Certificate message is
-also sent.
+also sent.  The server MUST ignore the extension unless TLS 1.2 or later is
+negotiated.
 
-When negotiating TLS 1.3, and using Delegated credentials, the server MUST send
-the DelegatedCredential as an extension in the CertificateEntry of its
-end-entity certificate.  When negotiating TLS 1.2, the DelegatedCredential MUST
-be sent as an extension in the ServerHello.
+When negotiating TLS 1.3, and using delegated credentials, the server MUST send
+the delegated credential as an extension in the CertificateEntry of its
+end-entity certificate; the client SHOULD ignore delegated credentials sent as
+extensions with any other certificate. When negotiating TLS 1.2, the delegated
+credential MUST be sent as an extension in the ServerHello.
 
-The DelegatedCredential contains a signature from the public key in the
+The delegated credential contains a signature from the public key in the
 end-entity certificate using a signature algorithm advertised by the client in
 the "signature_algorithms" extension. Additionally, the credential's public
 key MUST be of a type that enables at least one of the supported signature
@@ -250,14 +254,14 @@ steps:
 * Verify that the current time is within the validity interval of the credential
   and that the credential's time to live is no more than 7 days.
 * Verify that the certificate has the DelegationUsage extension, which permits
-  the use of Delegated credentials.
+  the use of delegated credentials.
 * Use the public key in the server's end-entity certificate to verify the
   signature on the credential.
 
 If one or more of these checks fail, then the delegated credential is deemed
 invalid.  Clients that receive invalid delegated credentials MUST terminate the
 connection with an "illegal_parameter" alert. If successful, the client uses the
-public key in the credential to verify a signature provided in the handshake: in
+public key in the credential to verify the signature provided in the handshake: in
 particular, the CertificateVerify message in TLS 1.3 and the ServerKeyExchange
 in 1.2.
 
