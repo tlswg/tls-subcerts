@@ -53,14 +53,15 @@ informative:
 --- abstract
 
 The organizational separation between the operator of a TLS server and the
-certificate authority restricts the operator in ways not necessarily envisioned
-in this design.  For example, the lifetime of certificates, how they may be used,
-and the algorithms they support are ultimately determined by the certificate
-authority.  This document describes a mechanism by which operators may delegate
-their own credentials for use in TLS, without breaking compatibility with
-clients that do not support this specification.
+certificate authority can create limitations.  For example, the lifetime of
+certificates, how they may be used, and the algorithms they support are
+ultimately determined by the certificate authority.  This document describes a
+mechanism by which operators may delegate their own credentials for use in TLS,
+without breaking compatibility with clients that do not support this
+specification.
 
 --- middle
+
 
 # Introduction
 
@@ -96,15 +97,33 @@ clarity, we will refer to the certificate issued by the CA as a "certificate",
 or "delegation certificate", and the one issued by the operator as a "delegated
 credential".
 
+## Change Log
+
+(\*) indicates changes to the wire protocol.
+
+draft-02
+
+  * Change DelegationUsage extension to be NULL.
+
+  * Drop support for TLS 1.2.
+
+  * Add the protocol version and credential signature algorithm to the
+    Credential structure. (*)
+
+  * Specify undefined behavior in a few cases: when the client receives a DC
+    without indicated support; when the client indicates the extension in an
+    invalid protocol version; and when DCs are sent as extensions to
+    certificates other than the end-entity certificate.
+
+
 # Solution Overview
 
 A delegated credential is a digitally signed data structure with two semantic
 fields: a validity interval and a public key (along with its associated
-algorithm).  The signature on the credential indicates a delegation from the
-certificate that is issued to the TLS server operator.  The secret key used to
-sign a credential is presumed to be one whose corresponding public key is
-contained in an X.509 certificate that associates one or more names to the
-credential.
+signature algorithm).  The signature on the credential indicates a delegation
+from the certificate that is issued to the TLS server operator.  The secret key
+used to sign a credential corresponds to the public key of the X.509 end-entity
+certificate.
 
 A TLS handshake that uses credentials differs from a normal handshake in a few
 important ways:
@@ -114,20 +133,20 @@ important ways:
 * The server provides both the certificate chain terminating in its certificate
   as well as the delegated credential.
 * The client uses information in the server's certificate to verify the
-  delegation and that the server is asserting an expected identity.
+  delegated credential and that the server is asserting an expected identity.
 * The client uses the public key in the credential as the server's
   working key for the TLS handshake.
 
 As detailed in {{delegated-credentials}}, the delegated credential is
-cryptographically bound to delegation certificate and the protocol in which the
-credential may be used.  This document specifies the use of delegated credentials
-in TLS 1.3 or later; their use in prior versions of the protocol is explicitly
-disallowed.
+cryptographically bound to the end-entity certificate and the protocol in which
+the credential may be used.  This document specifies the use of delegated
+credentials in TLS 1.3 or later; their use in prior versions of the protocol is
+explicitly disallowed.
 
 Delegated credentials allow the server to terminate TLS connections on behalf of
 the certificate owner.  If a credential is stolen, there is no mechanism for
-revoking it without revoking the certificate itself.  To limit the exposure of a
-delegation credential compromise, servers may not issue credentials with a
+revoking it without revoking the certificate itself.  To limit exposure in case
+a delegated credential is compromised, servers may not issue credentials with a
 validity period longer than 7 days.  This mechanism is described in detail in
 {{client-and-server-behavior}}.
 
@@ -136,8 +155,7 @@ outdated protocols such as SSLv2 can be used to forge signatures for
 certificates that contain the keyEncipherment KeyUsage ({{!RFC5280}} section
 4.2.1.3)  In order to prevent this type of cross-protocol attack, we define a
 new DelegationUsage extension to X.509 that permits use of delegated
-credentials.  The certificate's KeyUsage is restricted in other ways, as
-described in {{certificate-requirements}}.
+credentials.  (See {{certificate-requirements}}.)
 
 ## Rationale
 
@@ -156,9 +174,9 @@ mechanisms like proxy certificates {{RFC3820}} for several reasons:
   the same public key, with different X.509 parameters.  Delegated credentials,
   which rely on a cryptographic binding between the entire certificate and the
   delegated credential, cannot.
-* Delegated credentials are bound to specific versions of TLS.  This prevents
-  them from being used for other protocols if a service owner allows multiple
-  versions of TLS.
+* Delegated credentials are bound to specific versions of TLS and signature
+  algorithm.  This prevents them from being used for other protocols or with
+  other signature algorithms than service owner allows.
 
 
 ## Related Work
@@ -220,8 +238,8 @@ has the following structure:
 ~~~~~~~~~~
    struct {
      uint32 valid_time;
-     SignatureScheme scheme;
-     ProtocolVersion version;
+     SignatureScheme expected_cert_verify_algorithm;
+     ProtocolVersion expected_version;
      opaque public_key<0..2^16-1>;
    } Credential;
 ~~~~~~~~~~
@@ -231,15 +249,17 @@ valid_time:
 : Relative time in seconds from the beginning of the delegation certificate's
   notBefore value after which the delegated credential is no longer valid.
 
-scheme:
+expected_cert_verify_algorithm:
 
-: The signature algorithm of the credential key pair, where the type SignatureScheme is
-  as defined in the TLS 1.3 standard.
+: The signature algorithm of the credential key pair, where the type
+  SignatureScheme is as defined in the TLS 1.3 standard. This is expected to be
+  the same as CertificateVerify.algorithm sent by the server.
 
-version:
+expected_version:
 
 : The version of TLS in which the credential will be used, where the type
-  ProtocolVersion is as defined in TLS 1.3.
+  ProtocolVersion is as defined in TLS 1.3. This is expected to match the
+  protocol version that is negotiated by the client and server.
 
 public_key:
 
@@ -251,14 +271,14 @@ The delegated credential has the following structure:
 ~~~~~~~~~~
    struct {
      Credential cred;
-     SignatureScheme scheme;
+     SignatureScheme algorithm;
      opaque signature<0..2^16-1>;
    } DelegatedCredential;
 ~~~~~~~~~~
 
-scheme:
+algorithm:
 
-: The signature algorithm used to sign the delegated credential.
+: The signature algorithm used to verify DelegatedCredential.signature.
 
 signature:
 
@@ -272,7 +292,7 @@ The signature of the DelegatedCredential is computed over the concatenation of:
 3. A single 0 byte, which serves as the separator.
 4. The DER-encoded X.509 end-entity certificate used to sign the
    DelegatedCredential.
-5. DelegatedCredential.cred.
+5. DelegatedCredential.algorithm.
 6. DelegatedCredential.scheme.
 
 The signature effectively binds the credential to the parameters of the
@@ -307,7 +327,7 @@ If the extension is present, the server MAY send a delegated credential
 extension; if the extension is not present, the server MUST NOT send a delegated
 credential.  A delegated credential MUST NOT be provided unless a Certificate
 message is also sent.  The server MUST ignore the extension unless TLS 1.3 or
-later is negotiated.
+a later version is negotiated.
 
 The server MUST send the delegated credential as an extension in the
 CertificateEntry of its end-entity certificate; the client SHOULD ignore
@@ -316,20 +336,24 @@ delegated credentials sent as extensions to any other certificate.
 The DelegatedCredential.scheme and Credential.scheme fields MUST be of a type
 advertised by the client in the "signature_algorithms" extension.  A delegated
 credential MUST NOT be negotiated otherwise, even if the client advertises
-support for delegated credentials.  The SignatureScheme the server selects in the
-"signature_algorithms" extension MUST be that of the credential public key.
+support for delegated credentials.
 
 On receiving a delegated credential and a certificate chain, the client
 validates the certificate chain and matches the end-entity certificate to the
 server's expected identity following its normal procedures.  It then takes the
 following steps:
 
-* Verify that the current time is within the validity interval of the credential
-  and that the credential's time to live is no more than 7 days.
-* Verify that the end-entity certificate satisfies the conditions specified in
-  Section {{certificate-requirements}}.
-* Use the public key in the server's end-entity certificate to verify the
-  signature of the credential.
+1. Verify that the current time is within the validity interval of the credential
+   and that the credential's time to live is no more than 7 days.
+2. Verify that DelegatedCredential.cred.expected_cert_verify_algorithm matches
+   the scheme indicated in the server's CertificateVerify message.
+3. Verify that DelegatedCredential.cred.expected_version matches the protocol
+   version indicated in the server's "supported_versions" extension.
+4. Verify that the end-entity certificate satisfies the conditions specified in
+   {{certificate-requirements}}.
+5. Use the public key in the server's end-entity certificate to verify the
+   signature of the credential using the algorithm indicated by
+   DelegatedCredential.algorithm.
 
 If one or more of these checks fail, then the delegated credential is deemed
 invalid.  Clients that receive invalid delegated credentials MUST terminate the
@@ -344,21 +368,16 @@ when the certificate permits the usage of delegated credentials.
 
 ~~~~~~~~~~
    id-ce-delegationUsage OBJECT IDENTIFIER ::=  { TBD }
-   DelegationUsage ::= SEQUENCE { strict BOOLEAN }
+   DelegationUsage ::= NULL
 ~~~~~~~~~~
 
+The extension MUST be marked non-critical.  (See Section 4.2 of {{RFC5280}}.)
 The client MUST NOT accept a delegated credential unless the server's end-entity
 certificate satisfies the following criteria:
 
 * It has the DelegationUsage extension.
 * It has the digitalSignature key usage enabled (see the Keyusage type in
-  {{RFC5280}}), but has the keyEncipherment and dataEncipherment usages are
-  disabled.
-
-The extension MAY be marked critical.  (See Section 4.2 of {{RFC5280}}.)  If the
-strict boolean is set to true, then the server MUST use delegated credential in
-the handshake; if no delegated credential is offered, then the client MUST abort
-the handshake with an "illegal_parameter" alert.
+  {{RFC5280}}).
 
 
 # IANA Considerations
@@ -366,19 +385,6 @@ the handshake with an "illegal_parameter" alert.
 TBD
 
 # Security Considerations
-
-## Isolating the delegation private key
-
-Marking the delegation certificate's DelegationUsage extension non-critical
-allows the certificate to be used for clients that do not support delegated
-credentials.  However, it may be desirable to ensure that the delegation
-certificate is only used in handshakes in which a delegated credential
-negotiated.  It suffices to mark the extension critical and set the strict
-boolean to true: if the client does not support delegated credentials, then it
-will abort the handshake if the certificate has the DelegationUsage extension
-(as per Section 4.2 of {{RFC5280}}); if the client indicates support, but the
-server does not offer a delegated credential, then the client will abort the
-handshake (as per {{certificate-requirements}}).
 
 ## Security of delegated private key
 
@@ -414,7 +420,8 @@ probes that a server can perform.
 
 # Acknowledgements
 
-Thanks to Kyle Nekritz, Anirudh Ramachandran, Benjamin Kaduk, Kazuho Oku,
-Daniel Kahn Gillmor for their discussions, ideas, and bugs they've found.
+Thanks to Christopher Patton, Kyle Nekritz, Anirudh Ramachandran, Benjamin
+Kaduk, Kazuho Oku, Daniel Kahn Gillmor for their discussions, ideas, and bugs
+they've found.
 
 --- back
