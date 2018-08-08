@@ -174,7 +174,7 @@ mechanisms like proxy certificates {{RFC3820}} for several reasons:
   the same public key, with different X.509 parameters.  Delegated credentials,
   which rely on a cryptographic binding between the entire certificate and the
   delegated credential, cannot.
-* Delegated credentials are bound to specific versions of TLS and signature
+* Each delegated credential is bound to a specific version of TLS and signature
   algorithm.  This prevents them from being used for other protocols or with
   other signature algorithms than service owner allows.
 
@@ -230,7 +230,7 @@ within an operator network.
 
 While X.509 forbids end-entity certificates from being used as issuers for
 other certificates, it is perfectly fine to use them to issue other signed
-objects as long as the certificate contains the digitalSignature key usage
+objects as long as the certificate contains the digitalSignature KeyUsage
 (RFC5280 section 4.2.1.3).  We define a new signed object format that would
 encode only the semantics that are needed for this application.  The credential
 has the following structure:
@@ -298,7 +298,7 @@ The signature of the DelegatedCredential is computed over the concatenation of:
 The signature effectively binds the credential to the parameters of the
 handshake in which it is used.  In particular, it ensures that credentials are
 only used with the certificate, protocol, and signature algorithm chosen by the
-delegator.  Minimizing their semantics in this way is intended to mitigate thee
+delegator.  Minimizing their semantics in this way is intended to mitigate the
 risk of cross protocol attacks involving delegated credentials.
 
 The code changes to create and verify delegated credentials would be localized
@@ -323,31 +323,31 @@ A client which supports this specification SHALL send an empty
 delegated credential without indicating support, then the client MUST abort with
 an "unexpected_message" alert.
 
-If the extension is present, the server MAY send a delegated credential
-extension; if the extension is not present, the server MUST NOT send a delegated
-credential.  A delegated credential MUST NOT be provided unless a Certificate
-message is also sent.  The server MUST ignore the extension unless TLS 1.3 or
-a later version is negotiated.
+If the extension is present, the server MAY send a delegated credential; if the
+extension is not present, the server MUST NOT send a delegated credential.  A
+delegated credential MUST NOT be provided unless a Certificate message is also
+sent.  The server MUST ignore the extension unless TLS 1.3 or a later version is
+negotiated.
 
 The server MUST send the delegated credential as an extension in the
 CertificateEntry of its end-entity certificate; the client SHOULD ignore
 delegated credentials sent as extensions to any other certificate.
 
-The DelegatedCredential.scheme and Credential.scheme fields MUST be of a type
+The algorithm and expected_cert_verify_algorithm fields MUST be of a type
 advertised by the client in the "signature_algorithms" extension.  A delegated
 credential MUST NOT be negotiated otherwise, even if the client advertises
 support for delegated credentials.
 
 On receiving a delegated credential and a certificate chain, the client
 validates the certificate chain and matches the end-entity certificate to the
-server's expected identity following its normal procedures.  It then takes the
+server's expected identity following its normal procedures.  It also takes the
 following steps:
 
 1. Verify that the current time is within the validity interval of the credential
    and that the credential's time to live is no more than 7 days.
-2. Verify that DelegatedCredential.cred.expected_cert_verify_algorithm matches
+2. Verify that expected_cert_verify_algorithm matches
    the scheme indicated in the server's CertificateVerify message.
-3. Verify that DelegatedCredential.cred.expected_version matches the protocol
+3. Verify that expected_version matches the protocol
    version indicated in the server's "supported_versions" extension.
 4. Verify that the end-entity certificate satisfies the conditions specified in
    {{certificate-requirements}}.
@@ -376,7 +376,7 @@ The client MUST NOT accept a delegated credential unless the server's end-entity
 certificate satisfies the following criteria:
 
 * It has the DelegationUsage extension.
-* It has the digitalSignature key usage enabled (see the Keyusage type in
+* It has the digitalSignature KeyUsage (see the KeyUsage extension defined in
   {{RFC5280}}).
 
 
