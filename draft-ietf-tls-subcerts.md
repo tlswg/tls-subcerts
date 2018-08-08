@@ -125,8 +125,8 @@ from the certificate that is issued to the TLS server operator.  The secret key
 used to sign a credential corresponds to the public key of the X.509 end-entity
 certificate.
 
-A TLS handshake that uses credentials differs from a normal handshake in a few
-important ways:
+A TLS handshake that uses delegated credentials differs from a normal handshake
+in a few important ways:
 
 * The client provides an extension in its ClientHello that indicates support
   for this mechanism.
