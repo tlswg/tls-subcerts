@@ -111,9 +111,10 @@ credential".
 
 draft-02
 
-  * Change public key type (*)
 
-  * Change DelegationUsage extension to be NULL.
+  * Change public key type. (*)
+
+  * Change DelegationUsage extension to be NULL and define its object identifier.
 
   * Drop support for TLS 1.2.
 
@@ -377,7 +378,7 @@ We define a new X.509 extension, DelegationUsage, to be used in the certificate
 when the certificate permits the usage of delegated credentials.
 
 ~~~~~~~~~~
-   id-ce-delegationUsage OBJECT IDENTIFIER ::=  { TBD }
+   id-ce-delegationUsage OBJECT IDENTIFIER ::=  { 1.3.6.1.4.1.44363.44 }
    DelegationUsage ::= NULL
 ~~~~~~~~~~
 
