@@ -271,7 +271,7 @@ expected_version:
 
 public_key:
 
-: The credential's public key, a DER-encoded {{!X690}} SubjectPublicKeyInfo as defined in
+: The credential's public key, a DER-encoded {{X690}} SubjectPublicKeyInfo as defined in
 {{!RFC5280}}.
 
 The delegated credential has the following structure:
