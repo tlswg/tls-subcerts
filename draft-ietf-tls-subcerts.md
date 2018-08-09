@@ -34,6 +34,15 @@ author:
        organization: RTFM, Inc.
        email: ekr@rtfm.com
 
+normative:
+  X690:
+      title: "Information technology - ASN.1 encoding Rules: Specification of Basic Encoding Rules (BER), Canonical     Encoding Rules (CER) and Distinguished Encoding Rules (DER)"
+      date: 2002
+      author:
+        org: ITU-T
+      seriesinfo:
+        ISO/IEC: 8825-1:2002 
+
 informative:
   XPROT:
       title: On the Security of TLS 1.3 and QUIC Against Weaknesses in PKCS#1 v1.5 Encryption
@@ -262,7 +271,7 @@ expected_version:
 
 public_key:
 
-: The credential's public key, a DER-encoded SubjectPublicKeyInfo as defined in
+: The credential's public key, a DER-encoded {{!X690}} SubjectPublicKeyInfo as defined in
 {{!RFC5280}}.
 
 The delegated credential has the following structure:
