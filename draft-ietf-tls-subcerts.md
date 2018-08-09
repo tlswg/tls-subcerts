@@ -103,6 +103,8 @@ credential".
 
 draft-02
 
+  * Change public key type (*)
+
   * Change DelegationUsage extension to be NULL.
 
   * Drop support for TLS 1.2.
@@ -240,7 +242,7 @@ has the following structure:
      uint32 valid_time;
      SignatureScheme expected_cert_verify_algorithm;
      ProtocolVersion expected_version;
-     opaque ASN.1_subjectPublicKeyInfo<1..2^24-1>;
+     opaque ASN1_subjectPublicKeyInfo<1..2^24-1>;
    } Credential;
 ~~~~~~~~~~
 
@@ -261,7 +263,7 @@ expected_version:
   ProtocolVersion is as defined in TLS 1.3. This is expected to match the
   protocol version that is negotiated by the client and server.
 
-ASN.1_subjectPublicKeyInfo:
+ASN1_subjectPublicKeyInfo:
 
 : The credential's public key, a DER-encoded SubjectPublicKeyInfo as defined in
 {{!RFC5280}}.
