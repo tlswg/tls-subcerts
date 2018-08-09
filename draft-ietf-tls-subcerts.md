@@ -240,7 +240,7 @@ has the following structure:
      uint32 valid_time;
      SignatureScheme expected_cert_verify_algorithm;
      ProtocolVersion expected_version;
-     opaque public_key<0..2^16-1>;
+     opaque ASN.1_subjectPublicKeyInfo<1..2^24-1>;
    } Credential;
 ~~~~~~~~~~
 
@@ -261,7 +261,7 @@ expected_version:
   ProtocolVersion is as defined in TLS 1.3. This is expected to match the
   protocol version that is negotiated by the client and server.
 
-public_key:
+ASN.1_subjectPublicKeyInfo:
 
 : The credential's public key, a DER-encoded SubjectPublicKeyInfo as defined in
 {{!RFC5280}}.
