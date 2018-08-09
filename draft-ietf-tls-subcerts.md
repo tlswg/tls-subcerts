@@ -73,7 +73,7 @@ specification.
 # Introduction
 
 Typically, a TLS server uses a certificate provided by some entity other than
-the operator of the server (a "Certification Authority" or CA) {{!RFC5246}}
+the operator of the server (a "Certification Authority" or CA) {{!RFC8446}}
 {{!RFC5280}}.  This organizational separation makes the TLS server operator
 dependent on the CA for some aspects of its operations, for example:
 
@@ -262,13 +262,13 @@ valid_time:
 expected_cert_verify_algorithm:
 
 : The signature algorithm of the credential key pair, where the type
-  SignatureScheme is as defined in the TLS 1.3 standard. This is expected to be
+  SignatureScheme is as defined in {{!RFC8446}}. This is expected to be
   the same as CertificateVerify.algorithm sent by the server.
 
 expected_version:
 
 : The version of TLS in which the credential will be used, where the type
-  ProtocolVersion is as defined in TLS 1.3. This is expected to match the
+  ProtocolVersion is as defined in {{!RFC8446}}. This is expected to match the
   protocol version that is negotiated by the client and server.
 
 ASN1_subjectPublicKeyInfo:
