@@ -34,9 +34,16 @@ author:
        organization: RTFM, Inc.
        email: ekr@rtfm.com
 
-informative:
-  RFC3820:
+normative:
+  X690:
+      title: "Information technology - ASN.1 encoding Rules: Specification of Basic Encoding Rules (BER), Canonical     Encoding Rules (CER) and Distinguished Encoding Rules (DER)"
+      date: 2002
+      author:
+        org: ITU-T
+      seriesinfo:
+        ISO/IEC: 8825-1:2002 
 
+informative:
   XPROT:
       title: On the Security of TLS 1.3 and QUIC Against Weaknesses in PKCS#1 v1.5 Encryption
       author:
@@ -53,9 +60,9 @@ informative:
 --- abstract
 
 The organizational separation between the operator of a TLS server and the
-certificate authority can create limitations.  For example, the lifetime of
+certification authority can create limitations.  For example, the lifetime of
 certificates, how they may be used, and the algorithms they support are
-ultimately determined by the certificate authority.  This document describes a
+ultimately determined by the certification authority.  This document describes a
 mechanism by which operators may delegate their own credentials for use in TLS,
 without breaking compatibility with clients that do not support this
 specification.
@@ -80,12 +87,13 @@ create short-lived certificates for servers in low-trust zones such as CDNs or
 remote data centers.  This allows server operators to limit the exposure of keys
 in cases that they do not realize a compromise has occurred.  The risk inherent
 in cross-organizational transactions makes it operationally infeasible to rely
-on an external CA for such short-lived credentials.  In OCSP stapling, if an
-operator chooses to talk frequently to the CA to obtain stapled responses, then
-failure to fetch an OCSP stapled response results only in degraded performance.
-On the other hand, failure to fetch a potentially large number of short lived
-certificates would result in the service not being available, which creates
-greater operational risk.
+on an external CA for such short-lived credentials.  In OCSP stapling (i.e.,
+using the Certificate Status extension types ocsp {{?RFC6066}} or ocsp_multi
+{{?RFC6961}}), if an operator chooses to talk frequently to the CA to obtain
+stapled responses, then failure to fetch an OCSP stapled response results only
+in degraded performance.  On the other hand, failure to fetch a potentially
+large number of short lived certificates would result in the service not being
+available, which creates greater operational risk.
 
 To remove these dependencies, this document proposes a limited delegation
 mechanism that allows a TLS server operator to issue its own credentials within
@@ -124,8 +132,8 @@ A delegated credential is a digitally signed data structure with two semantic
 fields: a validity interval and a public key (along with its associated
 signature algorithm).  The signature on the credential indicates a delegation
 from the certificate that is issued to the TLS server operator.  The secret key
-used to sign a credential corresponds to the public key of the X.509 end-entity
-certificate.
+used to sign a credential corresponds to the public key of the TLS server's
+X.509 end-entity certificate.
 
 A TLS handshake that uses delegated credentials differs from a normal handshake
 in a few important ways:
@@ -155,14 +163,14 @@ validity period longer than 7 days.  This mechanism is described in detail in
 It was noted in [XPROT] that certificates in use by servers that support
 outdated protocols such as SSLv2 can be used to forge signatures for
 certificates that contain the keyEncipherment KeyUsage ({{!RFC5280}} section
-4.2.1.3)  In order to prevent this type of cross-protocol attack, we define a
+4.2.1.3).  In order to prevent this type of cross-protocol attack, we define a
 new DelegationUsage extension to X.509 that permits use of delegated
 credentials.  (See {{certificate-requirements}}.)
 
 ## Rationale
 
 Delegated credentials present a better alternative than other delegation
-mechanisms like proxy certificates {{RFC3820}} for several reasons:
+mechanisms like proxy certificates {{?RFC3820}} for several reasons:
 
 * There is no change needed to certificate validation at the PKI layer.
 * X.509 semantics are very rich.  This can cause unintended consequences if a
@@ -190,7 +198,7 @@ incur per-transaction latency, since the front-end server has to interact with
 a back-end server that holds a private key.  The mechanism proposed in this
 document allows the delegation to be done off-line, with no per-transaction
 latency.  The figure below compares the message flows for these two mechanisms
-with TLS 1.3 {{?I-D.ietf-tls-tls13}}.
+with TLS 1.3 {{?I-D.ietf-tls-tls13}}, where DC is delegated credentials.
 
 ~~~~~~~~~~
 LURK:
@@ -265,7 +273,7 @@ expected_version:
 
 ASN1_subjectPublicKeyInfo:
 
-: The credential's public key, a DER-encoded SubjectPublicKeyInfo as defined in
+: The credential's public key, a DER-encoded {{X690}} SubjectPublicKeyInfo as defined in
 {{!RFC5280}}.
 
 The delegated credential has the following structure:
@@ -424,6 +432,6 @@ probes that a server can perform.
 
 Thanks to Christopher Patton, Kyle Nekritz, Anirudh Ramachandran, Benjamin
 Kaduk, Kazuho Oku, Daniel Kahn Gillmor for their discussions, ideas, and bugs
-they've found.
+they have found.
 
 --- back
