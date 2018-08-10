@@ -430,6 +430,6 @@ probes that a server can perform.
 
 Thanks to Christopher Patton, Kyle Nekritz, Anirudh Ramachandran, Benjamin
 Kaduk, Kazuho Oku, Daniel Kahn Gillmor for their discussions, ideas, and bugs
-they've found.
+they have found.
 
 --- back
