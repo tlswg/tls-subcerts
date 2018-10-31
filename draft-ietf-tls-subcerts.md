@@ -303,8 +303,8 @@ The signature of the DelegatedCredential is computed over the concatenation of:
 3. A single 0 byte, which serves as the separator.
 4. The DER-encoded X.509 end-entity certificate used to sign the
    DelegatedCredential.
-5. DelegatedCredential.algorithm.
-6. DelegatedCredential.scheme.
+5. DelegatedCredential.cred.
+6. DelegatedCredential.algorithm.
 
 The signature effectively binds the credential to the parameters of the
 handshake in which it is used.  In particular, it ensures that credentials are
