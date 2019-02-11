@@ -109,6 +109,10 @@ credential".
 
 (\*) indicates changes to the wire protocol.
 
+draft-03
+
+   * Remove protocol version from the Credential structure. (*)
+
 draft-02
 
 
@@ -149,10 +153,10 @@ in a few important ways:
   working key for the TLS handshake.
 
 As detailed in {{delegated-credentials}}, the delegated credential is
-cryptographically bound to the end-entity certificate and the protocol in which
-the credential may be used.  This document specifies the use of delegated
-credentials in TLS 1.3 or later; their use in prior versions of the protocol is
-explicitly disallowed.
+cryptographically bound to the end-entity certificate with which the
+credential may be used.  This document specifies the use of delegated
+credentials in TLS 1.3 or later; their use in prior versions of the
+protocol is explicitly disallowed.
 
 Delegated credentials allow the server to terminate TLS connections on behalf of
 the certificate owner.  If a credential is stolen, there is no mechanism for
@@ -250,7 +254,6 @@ has the following structure:
    struct {
      uint32 valid_time;
      SignatureScheme expected_cert_verify_algorithm;
-     ProtocolVersion expected_version;
      opaque ASN1_subjectPublicKeyInfo<1..2^24-1>;
    } Credential;
 ~~~~~~~~~~
@@ -265,12 +268,6 @@ expected_cert_verify_algorithm:
 : The signature algorithm of the credential key pair, where the type
   SignatureScheme is as defined in {{!RFC8446}}. This is expected to be
   the same as CertificateVerify.algorithm sent by the server.
-
-expected_version:
-
-: The version of TLS in which the credential will be used, where the type
-  ProtocolVersion is as defined in {{!RFC8446}}. This is expected to match the
-  protocol version that is negotiated by the client and server.
 
 ASN1_subjectPublicKeyInfo:
 
@@ -308,7 +305,7 @@ The signature of the DelegatedCredential is computed over the concatenation of:
 
 The signature effectively binds the credential to the parameters of the
 handshake in which it is used.  In particular, it ensures that credentials are
-only used with the certificate, protocol, and signature algorithm chosen by the
+only used with the certificate and signature algorithm chosen by the
 delegator.  Minimizing their semantics in this way is intended to mitigate the
 risk of cross protocol attacks involving delegated credentials.
 
@@ -358,11 +355,9 @@ following steps:
    and that the credential's time to live is no more than 7 days.
 2. Verify that expected_cert_verify_algorithm matches
    the scheme indicated in the server's CertificateVerify message.
-3. Verify that expected_version matches the protocol
-   version indicated in the server's "supported_versions" extension.
-4. Verify that the end-entity certificate satisfies the conditions specified in
+3. Verify that the end-entity certificate satisfies the conditions specified in
    {{certificate-requirements}}.
-5. Use the public key in the server's end-entity certificate to verify the
+4. Use the public key in the server's end-entity certificate to verify the
    signature of the credential using the algorithm indicated by
    DelegatedCredential.algorithm.
 
