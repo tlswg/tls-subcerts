@@ -189,9 +189,9 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
   the same public key, with different X.509 parameters.  Delegated credentials,
   which rely on a cryptographic binding between the entire certificate and the
   delegated credential, cannot.
-* Each delegated credential is bound to a specific version of TLS and signature
-  algorithm.  This prevents them from being used for other protocols or with
-  other signature algorithms than service owner allows.
+* Each delegated credential is bound to a specific signature
+  algorithm.  This prevents them from being used with other,
+  unintended, signature algorithms.
 
 
 ## Related Work
@@ -426,8 +426,8 @@ probes that a server can perform.
 
 # Acknowledgements
 
-Thanks to Christopher Patton, Kyle Nekritz, Anirudh Ramachandran, Benjamin
-Kaduk, Kazuho Oku, Daniel Kahn Gillmor for their discussions, ideas, and bugs
-they have found.
+Thanks to David Benjamin, Christopher Patton, Kyle Nekritz, Anirudh Ramachandran, Benjamin
+Kaduk, Kazuho Oku, Daniel Kahn Gillmor, Watson Ladd for their discussions, ideas,
+and bugs they have found.
 
 --- back
