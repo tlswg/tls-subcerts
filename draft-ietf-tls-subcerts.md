@@ -103,7 +103,7 @@ names, it is safe to make such delegations as long as they only enable the
 recipient of the delegation to speak for names that the CA has authorized.  For
 clarity, we will refer to the certificate issued by the CA as a "certificate",
 or "delegation certificate", and the one issued by the operator as a "delegated
-credential".
+credential" or "DC".
 
 ## Change Log
 
@@ -156,7 +156,7 @@ As detailed in {{delegated-credentials}}, the delegated credential is
 cryptographically bound to the end-entity certificate with which the
 credential may be used.  This document specifies the use of delegated
 credentials in TLS 1.3 or later; their use in prior versions of the
-protocol is explicitly disallowed.
+protocol is not allowed.
 
 Delegated credentials allow the server to terminate TLS connections on behalf of
 the certificate owner.  If a credential is stolen, there is no mechanism for
@@ -181,7 +181,7 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
 * X.509 semantics are very rich.  This can cause unintended consequences if a
   service owner creates a proxy certificate where the properties differ from the leaf
   certificate.  For this reason, delegated credentials have very restricted
-  semantics which should not conflict with X.509 semantics.
+  semantics that should not conflict with X.509 semantics.
 * Proxy certificates rely on the certificate path building process to establish
   a binding between the proxy certificate and the server certificate.  Since
   the certificate path building process is not cryptographically protected, it is
@@ -189,9 +189,9 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
   the same public key, with different X.509 parameters.  Delegated credentials,
   which rely on a cryptographic binding between the entire certificate and the
   delegated credential, cannot.
-* Each delegated credential is bound to a specific signature
-  algorithm.  This prevents them from being used with other,
-  unintended, signature algorithms.
+* Each delegated credential is bound to a specific signature algorithm that may
+  be used to sign the TLS handshake ({{!RFC8446}} section 4.2.3).  This prevents
+  them from being used with other, perhaps unintended signature algorithms.
 
 
 ## Related Work
@@ -203,7 +203,7 @@ incur per-transaction latency, since the front-end server has to interact with
 a back-end server that holds a private key.  The mechanism proposed in this
 document allows the delegation to be done off-line, with no per-transaction
 latency.  The figure below compares the message flows for these two mechanisms
-with TLS 1.3 {{?I-D.ietf-tls-tls13}}, where DC is delegated credentials.
+with TLS 1.3 {{?I-D.ietf-tls-tls13}}.
 
 ~~~~~~~~~~
 LURK:
@@ -237,7 +237,7 @@ addition to requiring frequent operationally-critical interactions with an
 external party, this makes the server operator dependent on the CA's
 willingness to issue certificates with sufficiently short lifetimes.  It also
 fails to address the issues with algorithm support.  Nonetheless, existing
-automated issuance APIs like ACME may be useful for provisioning credentials,
+automated issuance APIs like ACME may be useful for provisioning credentials
 within an operator network.
 
 
@@ -290,8 +290,9 @@ algorithm:
 
 signature:
 
-: The signature over the credential with the end-entity certificate's public
-  key, using the scheme.
+: The delegation, a signature that binds the credential to the end-entity
+  certificate's public key as specified below. The signature scheme is specified
+  by DelegatedCredential.algorithm.
 
 The signature of the DelegatedCredential is computed over the concatenation of:
 
@@ -309,10 +310,10 @@ only used with the certificate and signature algorithm chosen by the
 delegator.  Minimizing their semantics in this way is intended to mitigate the
 risk of cross protocol attacks involving delegated credentials.
 
-The code changes to create and verify delegated credentials would be localized
-to the TLS stack, which has the advantage of avoiding changes to
-security-critical and often delicate PKI code (though of course moves that
-complexity to the TLS stack).
+The code changes required in order to create and verify delegated credentials,
+and the implementation complexity this entails, are localized to the TLS
+stack.  This has the advantage of avoiding changes to security-critical and
+often delicate PKI code.
 
 ## Client and Server behavior
 
@@ -348,14 +349,15 @@ support for delegated credentials.
 
 On receiving a delegated credential and a certificate chain, the client
 validates the certificate chain and matches the end-entity certificate to the
-server's expected identity following its normal procedures.  It also takes the
-following steps:
+server's expected identity in the usual way.  It also takes the following steps:
 
 1. Verify that the current time is within the validity interval of the credential
-   and that the credential's time to live is no more than 7 days.
+   and that the credential's time to live is no more than 7 days. This is done
+   by asserting that the current time is no more than the delegation
+   certificate's notBefore value plus DelegatedCredential.cred.valid_time.
 2. Verify that expected_cert_verify_algorithm matches
    the scheme indicated in the server's CertificateVerify message.
-3. Verify that the end-entity certificate satisfies the conditions specified in
+3. Verify that the end-entity certificate satisfies the conditions in
    {{certificate-requirements}}.
 4. Use the public key in the server's end-entity certificate to verify the
    signature of the credential using the algorithm indicated by
@@ -396,13 +398,13 @@ TBD
 
 Delegated credentials limit the exposure of the TLS private key by limiting
 its validity.  An attacker who compromises the private key of a delegated
-credential can act as a man in the middle until the delegate credential
-expires, however they cannot create new delegated credentials.  Thus delegated
+credential can act as a man in the middle until the delegate credential expires,
+however they cannot create new delegated credentials.  Thus, delegated
 credentials should not be used to send a delegation to an untrusted party, but
 is meant to be used between parties that have some trust relationship with each
 other.  The secrecy of the delegated private key is thus important and several
-access control mechanisms SHOULD be used to protect it such as file system
-controls, physical security or hardware security modules.
+access control mechanisms SHOULD be used to protect it, including file system
+controls, physical security, or hardware security modules.
 
 
 ## Revocation of delegated credentials
