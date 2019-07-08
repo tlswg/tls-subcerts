@@ -358,7 +358,7 @@ support for delegated credentials.
 A server which supports this specification SHALL send an empty
 "delegated_credential" extension in the CertificateRequest message when
 asking for client authentication.  If the client receives a
-delegated credential without indicating support, then the client MUST abort with
+delegated credential without indicating support in its ClientHello, then the client MUST abort with
 an "unexpected_message" alert.
 
 If the extension is present, the client MAY send a delegated credential; if the
