@@ -154,8 +154,8 @@ in a few important ways:
 * The authenticating intitiator uses information from the peer's certificate
   to verify the delegated credential and that the peer is asserting an
   expected identity.
-* Both peers use the public key in the credential as the certificate's
-  working key for the TLS handshake.
+* Peers accepting the delegated credential use it as the certificate's
+  working key for the TLS hadshake
 
 As detailed in {{delegated-credentials}}, the delegated credential is
 cryptographically bound to the end-entity certificate with which the
@@ -335,8 +335,8 @@ This document defines the following extension code point.
 ### Server authentication
 
 A client which supports this specification SHALL send an empty
-"delegated_credential" extension in its ClientHello.  If the server receives a
-delegated credential without indicating support, then the server MUST abort
+"delegated_credential" extension in its ClientHello.  If the client receives a
+delegated credential without indicating support, then the client MUST abort
 with an "unexpected_message" alert.
 
 If the extension is present, the server MAY send a delegated credential; if the
@@ -358,9 +358,9 @@ an "illegal_parameter" alert.
 
 A server which supports this specification SHALL send an empty
 "delegated_credential" extension in the CertificateRequest message when
-asking for client authentication.  If the client receives a
-delegated credential without indicating support in its ClientHello, then the client MUST abort with
-an "unexpected_message" alert.
+requesting client authentication.  If the server receives a
+delegated credential without indicating support in its CertificateRequest,
+then the server MUST abort with an "unexpected_message" alert.
 
 If the extension is present, the client MAY send a delegated credential; if the
 extension is not present, the client MUST NOT send a delegated credential.
@@ -373,9 +373,8 @@ delegated credentials sent as extensions to any other certificate.
 
 The algorithm and expected_cert_verify_algorithm fields MUST be of a type
 advertised by the server in the "signature_algorithms" extension and are
-considered invalid otherwise.  Servers that
-receive invalid delegated credentials MUST terminate the connection with
-an "illegal_parameter" alert.
+considered invalid otherwise.  Servers that receive invalid delegated
+credentials MUST terminate the connection with an "illegal_parameter" alert.
 
 ### Validating a Delegated Credential
 
