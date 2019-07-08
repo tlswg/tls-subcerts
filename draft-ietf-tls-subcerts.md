@@ -349,9 +349,10 @@ CertificateEntry of its end-entity certificate; the client SHOULD ignore
 delegated credentials sent as extensions to any other certificate.
 
 The algorithm and expected_cert_verify_algorithm fields MUST be of a type
-advertised by the client in the "signature_algorithms" extension.  A delegated
-credential MUST NOT be negotiated otherwise, even if the client advertises
-support for delegated credentials.
+advertised by the client in the "signature_algorithms" extension and are
+considered invalid otherwise.  Clients that
+receive invalid delegated credentials MUST terminate the connection with
+an "illegal_parameter" alert.
 
 ### Client authentication
 
@@ -371,9 +372,10 @@ CertificateEntry of its end-entity certificate; the server SHOULD ignore
 delegated credentials sent as extensions to any other certificate.
 
 The algorithm and expected_cert_verify_algorithm fields MUST be of a type
-advertised by the server in the "signature_algorithms" extension.  A delegated
-credential MUST NOT be negotiated otherwise, even if the server advertises
-support for delegated credentials.
+advertised by the server in the "signature_algorithms" extension and are
+considered invalid otherwise.  Servers that
+receive invalid delegated credentials MUST terminate the connection with
+an "illegal_parameter" alert.
 
 ### Validating a Delegated Credential
 
@@ -386,18 +388,18 @@ peer's expected identity in the usual way.  It also takes the following steps:
    by asserting that the current time is no more than the delegation
    certificate's notBefore value plus DelegatedCredential.cred.valid_time.
 2. Verify that expected_cert_verify_algorithm matches
-   the scheme indicated in the server's CertificateVerify message.
+   the scheme indicated in the peer's CertificateVerify message.
 3. Verify that the end-entity certificate satisfies the conditions in
    {{certificate-requirements}}.
-4. Use the public key in the server's end-entity certificate to verify the
+4. Use the public key in the peer's end-entity certificate to verify the
    signature of the credential using the algorithm indicated by
    DelegatedCredential.algorithm.
 
 If one or more of these checks fail, then the delegated credential is deemed
-invalid.  Clients that receive invalid delegated credentials MUST terminate the
-connection with an "illegal_parameter" alert.  If successful, the client uses the
-public key in the credential to verify the signature in the server's
-CertificateVerify message.
+invalid.  Clients and servers that receive invalid delegated credentials MUST terminate the
+connection with an "illegal_parameter" alert.  If successful, the participant
+receiving the Certificate message uses the public key in the credential to verify
+the signature in the peer's CertificateVerify message.
 
 ## Certificate Requirements
 
