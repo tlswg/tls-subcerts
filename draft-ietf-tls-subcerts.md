@@ -109,6 +109,10 @@ credential" or "DC".
 
 (\*) indicates changes to the wire protocol.
 
+draft-04
+
+   * Add support for client certificates.
+
 draft-03
 
    * Remove protocol version from the Credential structure. (*)
@@ -136,20 +140,21 @@ draft-02
 A delegated credential is a digitally signed data structure with two semantic
 fields: a validity interval and a public key (along with its associated
 signature algorithm).  The signature on the credential indicates a delegation
-from the certificate that is issued to the TLS server operator.  The secret key
-used to sign a credential corresponds to the public key of the TLS server's
+from the certificate that is issued to the peer.  The secret key
+used to sign a credential corresponds to the public key of the peer's
 X.509 end-entity certificate.
 
 A TLS handshake that uses delegated credentials differs from a normal handshake
 in a few important ways:
 
-* The client provides an extension in its ClientHello that indicates support
-  for this mechanism.
-* The server provides both the certificate chain terminating in its certificate
-  as well as the delegated credential.
-* The client uses information in the server's certificate to verify the
-  delegated credential and that the server is asserting an expected identity.
-* The client uses the public key in the credential as the server's
+* The initiating peer provides an extension in its ClientHello or CertificateRequest
+  that indicates support for this mechanism.
+* The peer sending the Certificate message provides both the certificate
+  chain terminating in its certificate as well as the delegated credential.
+* The authenticating intitiator uses information from the peer's certificate
+  to verify the delegated credential and that the server is asserting an
+  expected identity.
+* Both peers use the public key in the credential as the server's
   working key for the TLS handshake.
 
 As detailed in {{delegated-credentials}}, the delegated credential is
@@ -158,7 +163,7 @@ credential may be used.  This document specifies the use of delegated
 credentials in TLS 1.3 or later; their use in prior versions of the
 protocol is not allowed.
 
-Delegated credentials allow the server to terminate TLS connections on behalf of
+Delegated credentials allow a peer to terminate TLS connections on behalf of
 the certificate owner.  If a credential is stolen, there is no mechanism for
 revoking it without revoking the certificate itself.  To limit exposure in case
 a delegated credential is compromised, servers may not issue credentials with a
@@ -297,7 +302,7 @@ signature:
 The signature of the DelegatedCredential is computed over the concatenation of:
 
 1. A string that consists of octet 32 (0x20) repeated 64 times.
-2. The context string "TLS, server delegated credentials".
+2. The context string "TLS, server delegated credentials" for servers and "TLS, client delegated credentials" for clients.
 3. A single 0 byte, which serves as the separator.
 4. The DER-encoded X.509 end-entity certificate used to sign the
    DelegatedCredential.
@@ -327,15 +332,16 @@ This document defines the following extension code point.
    } ExtensionType;
 ~~~~~~~~~~
 
-A client which supports this specification SHALL send an empty
-"delegated_credential" extension in its ClientHello.  If the client receives a
-delegated credential without indicating support, then the client MUST abort with
-an "unexpected_message" alert.
+### Server authentication
 
-If the extension is present, the server MAY send a delegated credential; if the
-extension is not present, the server MUST NOT send a delegated credential.  A
-delegated credential MUST NOT be provided unless a Certificate message is also
-sent.  The server MUST ignore the extension unless TLS 1.3 or a later version is
+A client which supports this specification SHALL send an empty
+"delegated_credential" extension in its ClientHello.  If the server receives a
+delegated credential without indicating support, then the server MUST abort
+with an "unexpected_message" alert.
+
+If the extension is present, the client MAY send a delegated credential; if the
+extension is not present, the server MUST NOT send a delegated credential.
+The server MUST ignore the extension unless TLS 1.3 or a later version is
 negotiated.
 
 The server MUST send the delegated credential as an extension in the
@@ -347,7 +353,31 @@ advertised by the client in the "signature_algorithms" extension.  A delegated
 credential MUST NOT be negotiated otherwise, even if the client advertises
 support for delegated credentials.
 
-On receiving a delegated credential and a certificate chain, the client
+### Client authentication
+
+A server which supports this specification SHALL send an empty
+"delegated_credential" extension in the CertificateRequest message when
+asking for client authentication.  If the client receives a
+delegated credential without indicating support, then the client MUST abort with
+an "unexpected_message" alert.
+
+If the extension is present, the client MAY send a delegated credential; if the
+extension is not present, the client MUST NOT send a delegated credential.
+The client MUST ignore the extension unless TLS 1.3 or a later version is
+negotiated.
+
+The client MUST send the delegated credential as an extension in the
+CertificateEntry of its end-entity certificate; the server SHOULD ignore
+delegated credentials sent as extensions to any other certificate.
+
+The algorithm and expected_cert_verify_algorithm fields MUST be of a type
+advertised by the server in the "signature_algorithms" extension.  A delegated
+credential MUST NOT be negotiated otherwise, even if the server advertises
+support for delegated credentials.
+
+### Validating a Delegated Credential
+
+On receiving a delegated credential and a certificate chain, the peer
 validates the certificate chain and matches the end-entity certificate to the
 server's expected identity in the usual way.  It also takes the following steps:
 
@@ -394,8 +424,8 @@ This document registers the "delegated_credentials" extension in the
 "TLS ExtensionType Values" registry.  The "delegated_credentials"
 extension has been assigned a code point of TBD.  The IANA registry
 lists this extension as "Recommended" (i.e., "Y") and indicates that
-it may appear in the ClientHello (CH) or CertificateRequest (CR)
-messages in TLS 1.3 {{RFC8446}}.
+it may appear in the ClientHello (CH), CertificateRequest (CR),
+or Certificate (CT) messages in TLS 1.3 {{RFC8446}}.
 
 # Security Considerations
 
@@ -403,7 +433,7 @@ messages in TLS 1.3 {{RFC8446}}.
 
 Delegated credentials limit the exposure of the TLS private key by limiting
 its validity.  An attacker who compromises the private key of a delegated
-credential can act as a man in the middle until the delegate credential expires,
+credential can act as a man-in-the-middle until the delegate credential expires,
 however they cannot create new delegated credentials.  Thus, delegated
 credentials should not be used to send a delegation to an untrusted party, but
 is meant to be used between parties that have some trust relationship with each
