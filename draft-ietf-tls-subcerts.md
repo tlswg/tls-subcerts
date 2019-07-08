@@ -339,7 +339,7 @@ A client which supports this specification SHALL send an empty
 delegated credential without indicating support, then the server MUST abort
 with an "unexpected_message" alert.
 
-If the extension is present, the client MAY send a delegated credential; if the
+If the extension is present, the server MAY send a delegated credential; if the
 extension is not present, the server MUST NOT send a delegated credential.
 The server MUST ignore the extension unless TLS 1.3 or a later version is
 negotiated.
