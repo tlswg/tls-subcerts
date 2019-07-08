@@ -16,7 +16,7 @@ author:
  -
        ins: R. Barnes
        name: Richard Barnes
-       organization: Mozilla
+       organization: Cisco
        email: rlb@ipv.sx
  -
        ins: S. Iyengar
