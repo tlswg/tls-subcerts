@@ -379,7 +379,7 @@ support for delegated credentials.
 
 On receiving a delegated credential and a certificate chain, the peer
 validates the certificate chain and matches the end-entity certificate to the
-server's expected identity in the usual way.  It also takes the following steps:
+peer's expected identity in the usual way.  It also takes the following steps:
 
 1. Verify that the current time is within the validity interval of the credential
    and that the credential's time to live is no more than 7 days. This is done
