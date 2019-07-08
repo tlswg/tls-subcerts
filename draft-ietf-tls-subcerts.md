@@ -59,12 +59,12 @@ informative:
 
 --- abstract
 
-The organizational separation between the operator of a TLS server and the
+The organizational separation between the operator of a TLS endpoint and the
 certification authority can create limitations.  For example, the lifetime of
 certificates, how they may be used, and the algorithms they support are
 ultimately determined by the certification authority.  This document describes a
 mechanism by which operators may delegate their own credentials for use in TLS,
-without breaking compatibility with clients that do not support this
+without breaking compatibility with peers that do not support this
 specification.
 
 --- middle
@@ -96,7 +96,7 @@ large number of short lived certificates would result in the service not being
 available, which creates greater operational risk.
 
 To remove these dependencies, this document proposes a limited delegation
-mechanism that allows a TLS server operator to issue its own credentials within
+mechanism that allows a TLS peer to issue its own credentials within
 the scope of a certificate issued by an external CA.  Because the above
 problems do not relate to the CA's inherent function of validating possession of
 names, it is safe to make such delegations as long as they only enable the
@@ -152,9 +152,9 @@ in a few important ways:
 * The peer sending the Certificate message provides both the certificate
   chain terminating in its certificate as well as the delegated credential.
 * The authenticating intitiator uses information from the peer's certificate
-  to verify the delegated credential and that the server is asserting an
+  to verify the delegated credential and that the peer is asserting an
   expected identity.
-* Both peers use the public key in the credential as the server's
+* Both peers use the public key in the credential as the certificate's
   working key for the TLS handshake.
 
 As detailed in {{delegated-credentials}}, the delegated credential is
@@ -166,7 +166,7 @@ protocol is not allowed.
 Delegated credentials allow a peer to terminate TLS connections on behalf of
 the certificate owner.  If a credential is stolen, there is no mechanism for
 revoking it without revoking the certificate itself.  To limit exposure in case
-a delegated credential is compromised, servers may not issue credentials with a
+a delegated credential is compromised, peers may not issue credentials with a
 validity period longer than 7 days.  This mechanism is described in detail in
 {{client-and-server-behavior}}.
 
