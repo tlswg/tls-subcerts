@@ -395,7 +395,7 @@ This document registers the "delegated_credentials" extension in the
 extension has been assigned a code point of TBD.  The IANA registry
 lists this extension as "Recommended" (i.e., "Y") and indicates that
 it may appear in the ClientHello (CH) or CertificateRequest (CR)
-messages in TLS 1.3 {{TLS}}.
+messages in TLS 1.3 {{RFC8446}}.
 
 # Security Considerations
 
