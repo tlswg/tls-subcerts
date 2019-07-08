@@ -443,6 +443,13 @@ access control mechanisms SHOULD be used to protect it, including file system
 controls, physical security, or hardware security modules.
 
 
+## Re-use of delegated credentials in multiple contexts
+
+It is possible to use the same delegated credential for both client and server
+authentication if the Certificate allows it.  This is safe because the context
+string used for delegated credentials is distinct in both contexts.
+
+
 ## Revocation of delegated credentials
 
 Delegated credentials do not provide any additional form of early revocation.
