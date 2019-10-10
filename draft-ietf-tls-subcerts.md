@@ -238,7 +238,7 @@ These two mechanisms can be complementary.  A server could use credentials for
 clients that support them, while using LURK to support legacy clients.
 
 It is possible to address the short-lived certificate concerns above by
-automating certificate issuance, e.g., with ACME {{RFC8555}}.  In
+automating certificate issuance, e.g., with ACME {{?RFC8555}}.  In
 addition to requiring frequent operationally-critical interactions with an
 external party, this makes the server operator dependent on the CA's
 willingness to issue certificates with sufficiently short lifetimes.  It also
