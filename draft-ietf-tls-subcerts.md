@@ -203,12 +203,13 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
 
 Many of the use cases for delegated credentials can also be addressed using
 purely server-side mechanisms that do not require changes to client behavior
-(e.g., LURK {{?I-D.mglt-lurk-tls-requirements}}).  These mechanisms, however,
-incur per-transaction latency, since the front-end server has to interact with
-a back-end server that holds a private key.  The mechanism proposed in this
-document allows the delegation to be done off-line, with no per-transaction
-latency.  The figure below compares the message flows for these two mechanisms
-with TLS 1.3 {{?I-D.ietf-tls-tls13}}.
+(e.g., a PKCS#11 interface to a remote hardware security module).  These
+mechanisms, however, incur per-transaction latency, since the front-end
+server has to interact with a back-end server that holds a private key.  The
+mechanism proposed in this document allows the delegation to be done
+off-line, with no per-transaction latency.  The figure below compares the
+message flows for these two mechanisms
+with TLS 1.3 {{!RFC8446}}.
 
 ~~~~~~~~~~
 LURK:
@@ -217,7 +218,7 @@ Client            Front-End            Back-End
   |----ClientHello--->|                    |
   |<---ServerHello----|                    |
   |<---Certificate----|                    |
-  |                   |<-------LURK------->|
+  |                   |<-----PKCS#11------>|
   |<---CertVerify-----|                    |
   |        ...        |                    |
 
@@ -237,7 +238,7 @@ These two mechanisms can be complementary.  A server could use credentials for
 clients that support them, while using LURK to support legacy clients.
 
 It is possible to address the short-lived certificate concerns above by
-automating certificate issuance, e.g., with ACME {{?I-D.ietf-acme-acme}}.  In
+automating certificate issuance, e.g., with ACME {{RFC8555}}.  In
 addition to requiring frequent operationally-critical interactions with an
 external party, this makes the server operator dependent on the CA's
 willingness to issue certificates with sufficiently short lifetimes.  It also
@@ -251,7 +252,7 @@ within an operator network.
 While X.509 forbids end-entity certificates from being used as issuers for
 other certificates, it is perfectly fine to use them to issue other signed
 objects as long as the certificate contains the digitalSignature KeyUsage
-(RFC5280 section 4.2.1.3).  We define a new signed object format that would
+(RFC 5280 section 4.2.1.3).  We define a new signed object format that would
 encode only the semantics that are needed for this application.  The credential
 has the following structure:
 
