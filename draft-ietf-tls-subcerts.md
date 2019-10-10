@@ -457,6 +457,11 @@ Since it is short lived, the expiry of the delegated credential would revoke
 the credential.  Revocation of the long term private key that signs the
 delegated credential also implicitly revokes the delegated credential.
 
+## Interactions with session resumption
+
+If a client decides to cache the certificate chain an re-validate it
+when resuming a connection, the client SHOULD also cache the associated
+delegated credential and re-validate it.
 
 ## Privacy considerations
 
