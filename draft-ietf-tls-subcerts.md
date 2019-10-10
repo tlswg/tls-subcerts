@@ -31,7 +31,7 @@ author:
  -
        ins: E. Rescorla
        name: Eric Rescorla
-       organization: RTFM, Inc.
+       organization: Mozilla
        email: ekr@rtfm.com
 
 normative:
