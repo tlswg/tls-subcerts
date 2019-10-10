@@ -55,6 +55,15 @@ informative:
         ins: J. Somorovsky
       seriesinfo: Proceedings of the 22nd ACM SIGSAC Conference on Computer and Communications Security
       date: 2015
+  KEYLESS:
+      title: An Analysis of TLS Handshake Proxying
+      author:
+      -
+        ins: N. Sullivan
+      -
+        ins: D. Stebila
+      seriesinfo: IEEE Trustcom/BigDataSE/ISPA 2015
+      date: 2015
 
 
 --- abstract
@@ -203,7 +212,7 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
 
 Many of the use cases for delegated credentials can also be addressed using
 purely server-side mechanisms that do not require changes to client behavior
-(e.g., a PKCS#11 interface to a remote hardware security module).  These
+(e.g., a PKCS#11 interface or a remote signing mechanism [KEYLESS]).  These
 mechanisms, however, incur per-transaction latency, since the front-end
 server has to interact with a back-end server that holds a private key.  The
 mechanism proposed in this document allows the delegation to be done
@@ -212,13 +221,13 @@ message flows for these two mechanisms
 with TLS 1.3 {{!RFC8446}}.
 
 ~~~~~~~~~~
-LURK:
+Remote key signing:
 
 Client            Front-End            Back-End
   |----ClientHello--->|                    |
   |<---ServerHello----|                    |
   |<---Certificate----|                    |
-  |                   |<-----PKCS#11------>|
+  |                   |<---remote sign---->|
   |<---CertVerify-----|                    |
   |        ...        |                    |
 
@@ -226,7 +235,7 @@ Client            Front-End            Back-End
 Delegated credentials:
 
 Client            Front-End            Back-End
-  |                   |<----DC minting---->|
+  |                   |<--DC distribution->|
   |----ClientHello--->|                    |
   |<---ServerHello----|                    |
   |<---Certificate----|                    |
