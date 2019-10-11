@@ -31,7 +31,7 @@ author:
  -
        ins: E. Rescorla
        name: Eric Rescorla
-       organization: RTFM, Inc.
+       organization: Mozilla
        email: ekr@rtfm.com
 
 normative:
@@ -54,6 +54,15 @@ informative:
       -
         ins: J. Somorovsky
       seriesinfo: Proceedings of the 22nd ACM SIGSAC Conference on Computer and Communications Security
+      date: 2015
+  KEYLESS:
+      title: An Analysis of TLS Handshake Proxying
+      author:
+      -
+        ins: N. Sullivan
+      -
+        ins: D. Stebila
+      seriesinfo: IEEE Trustcom/BigDataSE/ISPA 2015
       date: 2015
 
 
@@ -203,21 +212,22 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
 
 Many of the use cases for delegated credentials can also be addressed using
 purely server-side mechanisms that do not require changes to client behavior
-(e.g., LURK {{?I-D.mglt-lurk-tls-requirements}}).  These mechanisms, however,
-incur per-transaction latency, since the front-end server has to interact with
-a back-end server that holds a private key.  The mechanism proposed in this
-document allows the delegation to be done off-line, with no per-transaction
-latency.  The figure below compares the message flows for these two mechanisms
-with TLS 1.3 {{?I-D.ietf-tls-tls13}}.
+(e.g., a PKCS#11 interface or a remote signing mechanism [KEYLESS]).  These
+mechanisms, however, incur per-transaction latency, since the front-end
+server has to interact with a back-end server that holds a private key.  The
+mechanism proposed in this document allows the delegation to be done
+off-line, with no per-transaction latency.  The figure below compares the
+message flows for these two mechanisms
+with TLS 1.3 {{!RFC8446}}.
 
 ~~~~~~~~~~
-LURK:
+Remote key signing:
 
 Client            Front-End            Back-End
   |----ClientHello--->|                    |
   |<---ServerHello----|                    |
   |<---Certificate----|                    |
-  |                   |<-------LURK------->|
+  |                   |<---remote sign---->|
   |<---CertVerify-----|                    |
   |        ...        |                    |
 
@@ -225,7 +235,7 @@ Client            Front-End            Back-End
 Delegated credentials:
 
 Client            Front-End            Back-End
-  |                   |<----DC minting---->|
+  |                   |<--DC distribution->|
   |----ClientHello--->|                    |
   |<---ServerHello----|                    |
   |<---Certificate----|                    |
@@ -237,7 +247,7 @@ These two mechanisms can be complementary.  A server could use credentials for
 clients that support them, while using LURK to support legacy clients.
 
 It is possible to address the short-lived certificate concerns above by
-automating certificate issuance, e.g., with ACME {{?I-D.ietf-acme-acme}}.  In
+automating certificate issuance, e.g., with ACME {{?RFC8555}}.  In
 addition to requiring frequent operationally-critical interactions with an
 external party, this makes the server operator dependent on the CA's
 willingness to issue certificates with sufficiently short lifetimes.  It also
@@ -251,7 +261,7 @@ within an operator network.
 While X.509 forbids end-entity certificates from being used as issuers for
 other certificates, it is perfectly fine to use them to issue other signed
 objects as long as the certificate contains the digitalSignature KeyUsage
-(RFC5280 section 4.2.1.3).  We define a new signed object format that would
+(RFC 5280 section 4.2.1.3).  We define a new signed object format that would
 encode only the semantics that are needed for this application.  The credential
 has the following structure:
 
@@ -457,6 +467,11 @@ Since it is short lived, the expiry of the delegated credential would revoke
 the credential.  Revocation of the long term private key that signs the
 delegated credential also implicitly revokes the delegated credential.
 
+## Interactions with session resumption
+
+If a client decides to cache the certificate chain an re-validate it
+when resuming a connection, the client SHOULD also cache the associated
+delegated credential and re-validate it.
 
 ## Privacy considerations
 
