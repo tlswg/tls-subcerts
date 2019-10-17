@@ -36,12 +36,12 @@ author:
 
 normative:
   X690:
-      title: "Information technology - ASN.1 encoding Rules: Specification of Basic Encoding Rules (BER), Canonical     Encoding Rules (CER) and Distinguished Encoding Rules (DER)"
-      date: 2002
+      title: "Information technology - ASN.1 encoding Rules: Specification of Basic Encoding Rules (BER), Canonical Encoding Rules (CER) and Distinguished Encoding Rules (DER)"
+      date: November 2015
       author:
         org: ITU-T
       seriesinfo:
-        ISO/IEC: 8825-1:2002 
+        ISO/IEC: 8825-1:2015 
 
 informative:
   XPROT:
@@ -92,12 +92,13 @@ dependent on the CA for some aspects of its operations, for example:
   will issue credentials.
 
 These dependencies cause problems in practice.  Server operators often want to
-create short-lived certificates for servers in low-trust zones such as CDNs or
-remote data centers.  This allows server operators to limit the exposure of keys
-in cases that they do not realize a compromise has occurred.  The risk inherent
-in cross-organizational transactions makes it operationally infeasible to rely
-on an external CA for such short-lived credentials.  In OCSP stapling (i.e.,
-using the Certificate Status extension types ocsp {{?RFC6066}} or ocsp_multi
+create short-lived certificates for servers in low-trust zones such as Content
+Delivery Network (CDNs) or remote data centers.  This allows server operators
+to limit the exposure of keys in cases that they do not realize a compromise
+has occurred.  The risk inherent in cross-organizational transactions makes it
+operationally infeasible to rely on an external CA for such short-lived
+credentials.  In Online Certiicate Status Protocol (OCSP) stapling (i.e., using
+the Certificate Status extension types ocsp {{?RFC6066}} or ocsp_multi
 {{?RFC6961}}), if an operator chooses to talk frequently to the CA to obtain
 stapled responses, then failure to fetch an OCSP stapled response results only
 in degraded performance.  On the other hand, failure to fetch a potentially
@@ -114,6 +115,7 @@ clarity, we will refer to the certificate issued by the CA as a "certificate",
 or "delegation certificate", and the one issued by the operator as a "delegated
 credential" or "DC".
 
+
 ## Change Log
 
 (\*) indicates changes to the wire protocol.
@@ -127,7 +129,6 @@ draft-03
    * Remove protocol version from the Credential structure. (*)
 
 draft-02
-
 
   * Change public key type. (*)
 
@@ -151,7 +152,7 @@ fields: a validity interval and a public key (along with its associated
 signature algorithm).  The signature on the credential indicates a delegation
 from the certificate that is issued to the peer.  The secret key
 used to sign a credential corresponds to the public key of the peer's
-X.509 end-entity certificate.
+X.509 end-entity certificate {{RFC5280}}.
 
 A TLS handshake that uses delegated credentials differs from a normal handshake
 in a few important ways:
@@ -181,7 +182,7 @@ validity period longer than 7 days.  This mechanism is described in detail in
 
 It was noted in [XPROT] that certificates in use by servers that support
 outdated protocols such as SSLv2 can be used to forge signatures for
-certificates that contain the keyEncipherment KeyUsage ({{!RFC5280}} section
+certificates that contain the keyEncipherment KeyUsage ({{RFC5280}} section
 4.2.1.3).  In order to prevent this type of cross-protocol attack, we define a
 new DelegationUsage extension to X.509 that permits use of delegated
 credentials.  (See {{certificate-requirements}}.)
@@ -204,7 +205,7 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
   which rely on a cryptographic binding between the entire certificate and the
   delegated credential, cannot.
 * Each delegated credential is bound to a specific signature algorithm that may
-  be used to sign the TLS handshake ({{!RFC8446}} section 4.2.3).  This prevents
+  be used to sign the TLS handshake ({{RFC8446}} section 4.2.3).  This prevents
   them from being used with other, perhaps unintended signature algorithms.
 
 
@@ -218,7 +219,7 @@ server has to interact with a back-end server that holds a private key.  The
 mechanism proposed in this document allows the delegation to be done
 off-line, with no per-transaction latency.  The figure below compares the
 message flows for these two mechanisms
-with TLS 1.3 {{!RFC8446}}.
+with TLS 1.3 {{RFC8446}}.
 
 ~~~~~~~~~~
 Remote key signing:
@@ -244,16 +245,16 @@ Client            Front-End            Back-End
 ~~~~~~~~~~
 
 These two mechanisms can be complementary.  A server could use credentials for
-clients that support them, while using LURK to support legacy clients.
+clients that support them, while using [KEYLESS] to support legacy clients.
 
 It is possible to address the short-lived certificate concerns above by
-automating certificate issuance, e.g., with ACME {{?RFC8555}}.  In
-addition to requiring frequent operationally-critical interactions with an
-external party, this makes the server operator dependent on the CA's
-willingness to issue certificates with sufficiently short lifetimes.  It also
-fails to address the issues with algorithm support.  Nonetheless, existing
-automated issuance APIs like ACME may be useful for provisioning credentials
-within an operator network.
+automating certificate issuance, e.g., with Automated Certificate Managmeent
+Encvironment (ACME) {{?RFC8555}}.  In addition to requiring frequent
+operationally-critical interactions with an external party, this makes
+the server operator dependent on the CA's willingness to issue certificates
+with sufficiently short lifetimes.  It also fails to address the issues with
+algorithm support.  Nonetheless, existing automated issuance APIs like ACME
+may be useful for provisioning credentials within an operator network.
 
 
 # Delegated Credentials
@@ -261,7 +262,7 @@ within an operator network.
 While X.509 forbids end-entity certificates from being used as issuers for
 other certificates, it is perfectly fine to use them to issue other signed
 objects as long as the certificate contains the digitalSignature KeyUsage
-(RFC 5280 section 4.2.1.3).  We define a new signed object format that would
+({{RFC5280}} section 4.2.1.3).  We define a new signed object format that would
 encode only the semantics that are needed for this application.  The credential
 has the following structure:
 
@@ -281,13 +282,13 @@ valid_time:
 expected_cert_verify_algorithm:
 
 : The signature algorithm of the credential key pair, where the type
-  SignatureScheme is as defined in {{!RFC8446}}. This is expected to be
+  SignatureScheme is as defined in {{RFC8446}}. This is expected to be
   the same as CertificateVerify.algorithm sent by the server.
 
 ASN1_subjectPublicKeyInfo:
 
 : The credential's public key, a DER-encoded {{X690}} SubjectPublicKeyInfo as defined in
-{{!RFC5280}}.
+{{RFC5280}}.
 
 The delegated credential has the following structure:
 
@@ -332,7 +333,7 @@ often delicate PKI code.
 
 ## Client and Server behavior
 
-This document defines the following extension code point.
+This document defines the following TLS extension code point.
 
 ~~~~~~~~~~
    enum {
