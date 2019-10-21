@@ -514,7 +514,7 @@ and bugs they have found.
 
 --- back
 
-ASN.1 Module {#module}
+# ASN.1 Module {#module}
 
 The following ASN.1 module provides the complete definition of the
 DelegationUsage certificate extension.  The ASN.1 module makes imports
