@@ -35,6 +35,14 @@ author:
        email: ekr@rtfm.com
 
 normative:
+  X680:
+      title: "Information technology - Abstract Syntax Notation One (ASN.1): Specification of basic notation"
+      date: November 2015
+      author:
+        org: ITU-T
+      seriesinfo:
+        ISO/IEC: 8824-1:2015
+
   X690:
       title: "Information technology - ASN.1 encoding Rules: Specification of Basic Encoding Rules (BER), Canonical Encoding Rules (CER) and Distinguished Encoding Rules (DER)"
       date: November 2015
@@ -414,11 +422,17 @@ the signature in the peer's CertificateVerify message.
 ## Certificate Requirements
 
 We define a new X.509 extension, DelegationUsage, to be used in the certificate
-when the certificate permits the usage of delegated credentials.
+when the certificate permits the usage of delegated credentials.  What follows
+is the ASN.1 {{X680}} for the DelegationUsage certificate extension.
 
 ~~~~~~~~~~
-   id-ce-delegationUsage OBJECT IDENTIFIER ::=  { 1.3.6.1.4.1.44363.44 }
-   DelegationUsage ::= NULL
+    ext-delegationUsage EXTENSION  ::= {
+        SYNTAX DelegationUsage IDENTIFIED BY id-ce-delegationUsage
+    }
+
+    DelegationUsage ::= NULL
+
+    id-ce-delegationUsage OBJECT IDENTIFIER ::=  { 1 3 6 1 4 1 44363 44 }
 ~~~~~~~~~~
 
 The extension MUST be marked non-critical.  (See Section 4.2 of {{RFC5280}}.)
@@ -438,6 +452,13 @@ extension has been assigned a code point of TBD.  The IANA registry
 lists this extension as "Recommended" (i.e., "Y") and indicates that
 it may appear in the ClientHello (CH), CertificateRequest (CR),
 or Certificate (CT) messages in TLS 1.3 {{RFC8446}}.
+
+This document also defines an ASN.1 module for the DelegationUsage
+certificate extension in {{module}}.  IANA is requested to register an
+Object Identfiier (OID) for the ASN.1 in "SMI Security for PKIX Module
+Identifier" arc.  An OID for the DelegationUsage certificate extension
+is not needed as it is already assigned to the extension from
+Cloudflare's IANA Private Enterprise Number (PEN) arc.
 
 # Security Considerations
 
@@ -492,3 +513,44 @@ Kaduk, Kazuho Oku, Daniel Kahn Gillmor, Watson Ladd for their discussions, ideas
 and bugs they have found.
 
 --- back
+
+# ASN.1 Module {#module}
+
+The following ASN.1 module provides the complete definition of the
+DelegationUsage certificate extension.  The ASN.1 module makes imports
+from {{!RFC5912}}.
+
+DelegatedCredentialExtn
+  { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101)
+    dod(2) infosec(1) modules(0) id-mod-delegate-credential-extn(TBD) }
+
+DEFINITIONS IMPLICIT TAGS ::=
+
+BEGIN
+
+-- EXPORT ALL
+
+IMPORTS
+
+  EXTENSION
+    FROM PKIX-CommonTypes-2009  -- From RFC 5912
+      { iso(1) identified-organization(3) dod(6) internet(1)
+        security(5) mechanisms(5) pkix(7) id-mod(0)
+        id-mod-pkixCommon-02(57) }
+;
+
+-- OIDS
+
+id-cloudflare OBJECT IDENTIFIER ::= { 1 3 6 1 4 1 44363 }
+
+-- EXTENSION
+
+ext-delegationUsage EXTENSION  ::= {
+  SYNTAX DelegationUsage IDENTIFIED BY id-ce-delegationUsage
+  }
+
+id-ce-delegationUsage OBJECT IDENTIFIER ::=  { id-cloudflare 44 }
+
+DelegationUsage ::= NULL
+
+END
