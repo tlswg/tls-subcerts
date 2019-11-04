@@ -49,7 +49,7 @@ normative:
       author:
         org: ITU-T
       seriesinfo:
-        ISO/IEC: 8825-1:2015 
+        ISO/IEC: 8825-1:2015
 
 informative:
   XPROT:
@@ -127,6 +127,10 @@ credential" or "DC".
 ## Change Log
 
 (\*) indicates changes to the wire protocol.
+
+draft-05
+   * Removed support for PKCS 1.5 RSA signature algorithms.
+   * Additional security considerations.
 
 draft-04
 
@@ -291,7 +295,11 @@ expected_cert_verify_algorithm:
 
 : The signature algorithm of the credential key pair, where the type
   SignatureScheme is as defined in {{RFC8446}}. This is expected to be
-  the same as CertificateVerify.algorithm sent by the server.
+  the same as CertificateVerify.algorithm sent by the server.  Only signature
+  algorithms allowed for use in CertificateVerify messages are allowed.  When
+  using RSA, the public key MUST NOT use the rsaEncryption OID, as a result,
+  the following algorithms are not allowed for use with delegated credentials:
+  rsa_pss_rsae_sha256, rsa_pss_rsae_sha384, rsa_pss_rsae_sha512.
 
 ASN1_subjectPublicKeyInfo:
 
@@ -406,7 +414,8 @@ peer's expected identity in the usual way.  It also takes the following steps:
    by asserting that the current time is no more than the delegation
    certificate's notBefore value plus DelegatedCredential.cred.valid_time.
 2. Verify that expected_cert_verify_algorithm matches
-   the scheme indicated in the peer's CertificateVerify message.
+   the scheme indicated in the peer's CertificateVerify message and that the
+   algorithm is allowed for use with delegated credentials.
 3. Verify that the end-entity certificate satisfies the conditions in
    {{certificate-requirements}}.
 4. Use the public key in the peer's end-entity certificate to verify the
