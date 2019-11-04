@@ -121,6 +121,7 @@ credential" or "DC".
 (\*) indicates changes to the wire protocol.
 
 draft-05
+
    * Removed support for PKCS 1.5 RSA signature algorithms.
    * Additional security considerations.
 
