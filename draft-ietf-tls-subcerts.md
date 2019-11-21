@@ -363,8 +363,8 @@ This document defines the following TLS extension code point.
 ### Server authentication
 
 A client which supports this specification SHALL send a
-"delegated_credential" extension in its ClientHello. This extension can
-be empty or contain a SignatureSchemeList value:
+"delegated_credential" extension in its ClientHello. The body of the extension
+consists of a SignatureSchemeList:
 
 ~~~~~~~~~~
    struct {
@@ -384,16 +384,12 @@ The server MUST send the delegated credential as an extension in the
 CertificateEntry of its end-entity certificate; the client SHOULD ignore
 delegated credentials sent as extensions to any other certificate.
 
-If the client's delegated_credential extension is empty, the algorithm and
-expected_cert_verify_algorithm field MUST be of a type advertised by the
-client in the "signature_algorithms" extension.  If the client's
-delegated_credential extension contains a SignatureSchemeList, the
-expected_cert_verify_algorithm field MUST be of a type contained in this
-SignatureSchemeList.  Delegated credentials containing non-conformant
-expected_cert_verify_algorithms are considered invalid.
-
-Clients that receive invalid delegated credentials MUST terminate the connection with
+The algorithm and expected_cert_verify_algorithm fields MUST be of a type
+advertised by the client in the SignatureSchemeList and are
+considered invalid otherwise.  Clients that
+receive invalid delegated credentials MUST terminate the connection with
 an "illegal_parameter" alert.
+
 
 ### Client authentication
 
