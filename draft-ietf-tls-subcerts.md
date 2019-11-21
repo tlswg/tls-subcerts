@@ -189,9 +189,11 @@ protocol is not allowed.
 Delegated credentials allow a peer to terminate TLS connections on behalf of
 the certificate owner.  If a credential is stolen, there is no mechanism for
 revoking it without revoking the certificate itself.  To limit exposure in case
-a delegated credential is compromised, peers may not issue credentials with a
-validity period longer than 7 days.  This mechanism is described in detail in
-{{client-and-server-behavior}}.
+of delegated credential private key compromise, delegated credentials have a maximum
+validity period.  In the absence of an application profile standard specifying
+otherwise, the maximum validity period is set to 7 days.  Peers MUST NOT issue
+credentials with a validity period longer than the maximum validity period.
+This mechanism is described in detail in {{client-and-server-behavior}}.
 
 It was noted in [XPROT] that certificates in use by servers that support
 outdated protocols such as SSLv2 can be used to forge signatures for
@@ -411,9 +413,9 @@ validates the certificate chain and matches the end-entity certificate to the
 peer's expected identity in the usual way.  It also takes the following steps:
 
 1. Verify that the current time is within the validity interval of the credential
-   and that the credential's time to live is no more than 7 days. This is done
-   by asserting that the current time is no more than the delegation
-   certificate's notBefore value plus DelegatedCredential.cred.valid_time.
+   and that the credential's time to live is no more than the maximum validity
+   period. This is done by asserting that the current time is no more than the
+   delegation certificate's notBefore value plus DelegatedCredential.cred.valid_time.
 2. Verify that expected_cert_verify_algorithm matches
    the scheme indicated in the peer's CertificateVerify message and that the
    algorithm is allowed for use with delegated credentials.
