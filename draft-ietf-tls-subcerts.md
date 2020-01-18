@@ -364,10 +364,18 @@ This document defines the following TLS extension code point.
 
 ### Server authentication
 
-A client which supports this specification SHALL send an empty
-"delegated_credential" extension in its ClientHello.  If the client receives a
-delegated credential without indicating support, then the client MUST abort
-with an "unexpected_message" alert.
+A client which supports this specification SHALL send a
+"delegated_credential" extension in its ClientHello. The body of the extension
+consists of a SignatureSchemeList:
+
+~~~~~~~~~~
+   struct {
+     SignatureScheme supported_signature_algorithm<2..2^16-2>;
+   } SignatureSchemeList;
+~~~~~~~~~~
+
+If the client receives a delegated credential without indicating support,
+then the client MUST abort with an "unexpected_message" alert.
 
 If the extension is present, the server MAY send a delegated credential; if the
 extension is not present, the server MUST NOT send a delegated credential.
@@ -379,10 +387,11 @@ CertificateEntry of its end-entity certificate; the client SHOULD ignore
 delegated credentials sent as extensions to any other certificate.
 
 The algorithm and expected_cert_verify_algorithm fields MUST be of a type
-advertised by the client in the "signature_algorithms" extension and are
+advertised by the client in the SignatureSchemeList and are
 considered invalid otherwise.  Clients that
 receive invalid delegated credentials MUST terminate the connection with
 an "illegal_parameter" alert.
+
 
 ### Client authentication
 
