@@ -357,7 +357,7 @@ This document defines the following TLS extension code point.
 ~~~~~~~~~~
    enum {
      ...
-     delegated_credential(TBD),
+     delegated_credential(34),
      (65535)
    } ExtensionType;
 ~~~~~~~~~~
@@ -469,7 +469,7 @@ certificate satisfies the following criteria:
 
 This document registers the "delegated_credentials" extension in the
 "TLS ExtensionType Values" registry.  The "delegated_credentials"
-extension has been assigned a code point of TBD.  The IANA registry
+extension has been assigned a code point of 34.  The IANA registry
 lists this extension as "Recommended" (i.e., "Y") and indicates that
 it may appear in the ClientHello (CH), CertificateRequest (CR),
 or Certificate (CT) messages in TLS 1.3 {{RFC8446}}.
