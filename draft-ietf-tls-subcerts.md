@@ -541,9 +541,10 @@ The following ASN.1 module provides the complete definition of the
 DelegationUsage certificate extension.  The ASN.1 module makes imports
 from {{!RFC5912}}.
 
-DelegatedCredentialExtn
-  { joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101)
-    dod(2) infosec(1) modules(0) id-mod-delegate-credential-extn(TBD) }
+DelegatedCredentialExtn {
+       iso(1) identified-organization(3) dod(6) internet(1)
+       security(5) mechanisms(5) pkix(7) id-mod(0)
+       id-mod-delegated-credential-extn(TBD) }
 
 DEFINITIONS IMPLICIT TAGS ::=
 
