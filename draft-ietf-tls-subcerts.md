@@ -35,7 +35,7 @@ author:
        email: ekr@rtfm.com
 
 normative:
-  X680:
+  X.680:
       title: "Information technology - Abstract Syntax Notation One (ASN.1): Specification of basic notation"
       date: November 2015
       author:
@@ -43,7 +43,7 @@ normative:
       seriesinfo:
         ISO/IEC: 8824-1:2015
 
-  X690:
+  X.690:
       title: "Information technology - ASN.1 encoding Rules: Specification of Basic Encoding Rules (BER), Canonical Encoding Rules (CER) and Distinguished Encoding Rules (DER)"
       date: November 2015
       author:
@@ -105,9 +105,9 @@ Delivery Network (CDNs) or remote data centers.  This allows server operators
 to limit the exposure of keys in cases that they do not realize a compromise
 has occurred.  The risk inherent in cross-organizational transactions makes it
 operationally infeasible to rely on an external CA for such short-lived
-credentials.  In Online Certiicate Status Protocol (OCSP) stapling (i.e., using
-the Certificate Status extension types ocsp {{?RFC6066}} or ocsp_multi
-{{?RFC6961}}), if an operator chooses to talk frequently to the CA to obtain
+credentials.  In Online Certificate Status Protocol (OCSP) stapling (i.e., using
+the Certificate Status extension type ocsp {{?RFC8446}}, if an operator
+chooses to talk frequently to the CA to obtain
 stapled responses, then failure to fetch an OCSP stapled response results only
 in degraded performance.  On the other hand, failure to fetch a potentially
 large number of short lived certificates would result in the service not being
@@ -123,10 +123,22 @@ clarity, we will refer to the certificate issued by the CA as a "certificate",
 or "delegation certificate", and the one issued by the operator as a "delegated
 credential" or "DC".
 
+# Conventions and Terminology
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+"SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+"OPTIONAL" in this document are to be interpreted as described in BCP
+14 {{!RFC2119}} {{!RFC8174}} when, and only when, they appear in all
+capitals, as shown here.
+
 
 ## Change Log
 
 (\*) indicates changes to the wire protocol.
+
+draft-06
+
+   * Modified IANA section, fixed nits
 
 draft-05
 
@@ -306,7 +318,7 @@ expected_cert_verify_algorithm:
 
 ASN1_subjectPublicKeyInfo:
 
-: The credential's public key, a DER-encoded {{X690}} SubjectPublicKeyInfo as defined in
+: The credential's public key, a DER-encoded {{X.690}} SubjectPublicKeyInfo as defined in
 {{RFC5280}}.
 
 The delegated credential has the following structure:
@@ -444,7 +456,7 @@ the signature in the peer's CertificateVerify message.
 
 We define a new X.509 extension, DelegationUsage, to be used in the certificate
 when the certificate permits the usage of delegated credentials.  What follows
-is the ASN.1 {{X680}} for the DelegationUsage certificate extension.
+is the ASN.1 {{X.680}} for the DelegationUsage certificate extension.
 
 ~~~~~~~~~~
     ext-delegationUsage EXTENSION  ::= {
@@ -453,7 +465,9 @@ is the ASN.1 {{X680}} for the DelegationUsage certificate extension.
 
     DelegationUsage ::= NULL
 
-    id-ce-delegationUsage OBJECT IDENTIFIER ::=  { 1 3 6 1 4 1 44363 44 }
+    id-ce-delegationUsage OBJECT IDENTIFIER ::= {
+        1 3 6 1 4 1 44363 44
+    }
 ~~~~~~~~~~
 
 The extension MUST be marked non-critical.  (See Section 4.2 of {{RFC5280}}.)
@@ -539,7 +553,7 @@ and bugs they have found.
 
 The following ASN.1 module provides the complete definition of the
 DelegationUsage certificate extension.  The ASN.1 module makes imports
-from {{!RFC5912}}.
+from {{?RFC5912}}.
 
 DelegatedCredentialExtn {
        iso(1) identified-organization(3) dod(6) internet(1)
