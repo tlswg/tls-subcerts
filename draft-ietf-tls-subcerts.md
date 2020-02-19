@@ -404,6 +404,11 @@ considered invalid otherwise.  Clients that
 receive invalid delegated credentials MUST terminate the connection with
 an "illegal_parameter" alert.
 
+The expected_cert_verify_algorithm field MUST be of a
+type advertised by the client in the SignatureSchemeList and is
+considered invalid otherwise.  Clients that receive invalid delegated
+credentials MUST terminate the connection with an "illegal_parameter"
+alert.
 
 ### Client authentication
 
