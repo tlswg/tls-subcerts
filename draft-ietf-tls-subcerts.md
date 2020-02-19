@@ -398,12 +398,6 @@ The server MUST send the delegated credential as an extension in the
 CertificateEntry of its end-entity certificate; the client SHOULD ignore
 delegated credentials sent as extensions to any other certificate.
 
-The algorithm and expected_cert_verify_algorithm fields MUST be of a type
-advertised by the client in the SignatureSchemeList and are
-considered invalid otherwise.  Clients that
-receive invalid delegated credentials MUST terminate the connection with
-an "illegal_parameter" alert.
-
 The expected_cert_verify_algorithm field MUST be of a
 type advertised by the client in the SignatureSchemeList and is
 considered invalid otherwise.  Clients that receive invalid delegated
