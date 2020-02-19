@@ -412,11 +412,13 @@ alert.
 
 ### Client authentication
 
-A server which supports this specification SHALL send an empty
-"delegated_credential" extension in the CertificateRequest message when
-requesting client authentication.  If the server receives a
-delegated credential without indicating support in its CertificateRequest,
-then the server MUST abort with an "unexpected_message" alert.
+A server that supports this specification SHALL send a
+"delegated_credential" extension in the CertificateRequest message
+when requesting client authentication.  The body of the
+extension consists of a SignatureSchemeList.  If the server receives a
+delegated credential without indicating support in its
+CertificateRequest, then the server MUST abort with an
+"unexpected_message" alert.
 
 If the extension is present, the client MAY send a delegated credential; if the
 extension is not present, the client MUST NOT send a delegated credential.
@@ -427,10 +429,13 @@ The client MUST send the delegated credential as an extension in the
 CertificateEntry of its end-entity certificate; the server SHOULD ignore
 delegated credentials sent as extensions to any other certificate.
 
-The algorithm and expected_cert_verify_algorithm fields MUST be of a type
-advertised by the server in the "signature_algorithms" extension and are
-considered invalid otherwise.  Servers that receive invalid delegated
-credentials MUST terminate the connection with an "illegal_parameter" alert.
+The algorithm field MUST be of a type advertised by the server
+in the "signature_algorithms" extension of the CertificateRequest message
+and the expected_cert_verify_algorithm field MUST be of a type
+advertised by the server in the SignatureSchemeList
+and considered invalid otherwise.  Servers that receive invalid
+delegated credentials MUST terminate the connection with an
+"illegal_parameter" alert.
 
 ### Validating a Delegated Credential
 
