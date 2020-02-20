@@ -557,37 +557,35 @@ from {{?RFC5912}}.
 
 ~~~
 
-DelegatedCredentialExtn {
-       iso(1) identified-organization(3) dod(6) internet(1)
-       security(5) mechanisms(5) pkix(7) id-mod(0)
-       id-mod-delegated-credential-extn(TBD) }
+DelegatedCredentialExtn
+  { iso(1) identified-organization(3) dod(6) internet(1)
+    security(5) mechanisms(5) pkix(7) id-mod(0)
+    id-mod-delegated-credential-extn(TBD) }
 
 DEFINITIONS IMPLICIT TAGS ::=
-
 BEGIN
 
 -- EXPORT ALL
 
 IMPORTS
 
-  EXTENSION
-    FROM PKIX-CommonTypes-2009  -- From RFC 5912
-      { iso(1) identified-organization(3) dod(6) internet(1)
-        security(5) mechanisms(5) pkix(7) id-mod(0)
-        id-mod-pkixCommon-02(57) }
-;
+EXTENSION
+  FROM PKIX-CommonTypes-2009 -- From RFC 5912
+  { iso(1) identified-organization(3) dod(6) internet(1)
+    security(5) mechanisms(5) pkix(7) id-mod(0)
+    id-mod-pkixCommon-02(57) } ;
 
--- OIDS
+-- OID
 
 id-cloudflare OBJECT IDENTIFIER ::= { 1 3 6 1 4 1 44363 }
 
 -- EXTENSION
 
-ext-delegationUsage EXTENSION  ::= {
-  SYNTAX DelegationUsage IDENTIFIED BY id-ce-delegationUsage
-  }
+ext-delegationUsage EXTENSION ::=
+  { SYNTAX DelegationUsage
+    IDENTIFIED BY id-ce-delegationUsage }
 
-id-ce-delegationUsage OBJECT IDENTIFIER ::=  { id-cloudflare 44 }
+id-ce-delegationUsage OBJECT IDENTIFIER ::= { id-cloudflare 44 }
 
 DelegationUsage ::= NULL
 
