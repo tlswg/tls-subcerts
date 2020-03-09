@@ -101,17 +101,17 @@ dependent on the CA for some aspects of its operations, for example:
 
 These dependencies cause problems in practice.  Server operators often want to
 create short-lived certificates for servers in low-trust zones such as Content
-Delivery Network (CDNs) or remote data centers.  This allows server operators
-to limit the exposure of keys in cases that they do not realize a compromise
-has occurred.  The risk inherent in cross-organizational transactions makes it
-operationally infeasible to rely on an external CA for such short-lived
-credentials.  In Online Certificate Status Protocol (OCSP) stapling (i.e., using
-the Certificate Status extension type ocsp {{?RFC8446}}, if an operator
-chooses to talk frequently to the CA to obtain
-stapled responses, then failure to fetch an OCSP stapled response results only
-in degraded performance.  On the other hand, failure to fetch a potentially
-large number of short lived certificates would result in the service not being
-available, which creates greater operational risk.
+Delivery Networks (CDNs) or remote data centers.  This allows server operators
+to limit the exposure of keys in cases where they do not realize a compromise
+has occurred.  However, the risk inherent in cross-organizational transactions makes it
+operationally infeasible to rely on an external CA for such short-lived credentials.
+For instance, in the case of Online Certificate Status Protocol (OCSP) stapling
+(i.e., using the Certificate Status extension type ocsp {{?RFC8446}}), a CA may fail
+to deliver OCSP stapled response.  While this will result in degraded performance,
+the ramifications of failing to deliver short-lived certificates are even worse: the
+service that depends on those certificates would go down entirely.  Thus, ensuring
+independence from CAs for short-lived certificates is critical to the uptime of a
+service.
 
 To remove these dependencies, this document proposes a limited delegation
 mechanism that allows a TLS peer to issue its own credentials within
