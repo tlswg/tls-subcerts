@@ -103,7 +103,7 @@ These dependencies cause problems in practice.  Server operators often want to
 create short-lived certificates for servers in low-trust zones such as Content
 Delivery Networks (CDNs) or remote data centers.  This allows server operators
 to limit the exposure of keys in cases where they do not realize a compromise
-has occurred.  But the risk inherent in cross-organizational transactions makes it
+has occurred.  However, the risk inherent in cross-organizational transactions makes it
 operationally infeasible to rely on an external CA for such short-lived credentials.
 For instance, in the case of Online Certificate Status Protocol (OCSP) stapling
 (i.e., using the Certificate Status extension type ocsp {{?RFC8446}}), a CA may fail
