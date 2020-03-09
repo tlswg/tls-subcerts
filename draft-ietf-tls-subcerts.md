@@ -469,9 +469,9 @@ is the ASN.1 {{X.680}} for the DelegationUsage certificate extension.
 
     DelegationUsage ::= NULL
 
-    id-ce-delegationUsage OBJECT IDENTIFIER ::= {
-        1 3 6 1 4 1 44363 44
-    }
+    id-ce-delegationUsage OBJECT IDENTIFIER ::=
+        { iso(1) identified-organization(3) dod(6) internet(1) private(4)
+          enterprise(1) id-cloudflare(44363) 44 }
 ~~~~~~~~~~
 
 The extension MUST be marked non-critical.  (See Section 4.2 of {{RFC5280}}.)
@@ -583,7 +583,9 @@ IMPORTS
 
 -- OIDS
 
-id-cloudflare OBJECT IDENTIFIER ::= { 1 3 6 1 4 1 44363 }
+id-cloudflare OBJECT IDENTIFIER ::=
+  { iso(1) identified-organization(3) dod(6) internet(1) private(4)
+    enterprise(1) 44363 }
 
 -- EXTENSION
 
