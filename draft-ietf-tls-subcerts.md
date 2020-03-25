@@ -570,7 +570,7 @@ that allow forging an RSA signature over an arbitrary message [BLEI].
 {{?RFC5246}} (Section 7.4.7.1.) describes a mitigation strategy requiring
 careful implementation for thwarting these attacks.
 Experience shows that in practice, server implementations may fail to fully
-thwary these attacks due to the complexity of this mitigation [ROBOT].
+thwart these attacks due to the complexity of this mitigation [ROBOT].
 For TLS 1.2 servers that support RSA key exchange using a DC-enabled end-entity
 certificate, a hypothetical signature forgery attack would allow forging a
 signature over a delegated credential.
