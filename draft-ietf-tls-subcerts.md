@@ -75,10 +75,23 @@ informative:
   BLEI:
       title: "Chosen Ciphertext Attacks against Protocols Based on RSA
       Encryption Standard PKCS #1"
+      author:
+      -
+        ins: D. Bleichenbacher
       seriesinfo: "Advances in Cryptology -- CRYPTO'98, LNCS vol. 1462, pages:
       1-12"
       date: 1998
-
+  ROBOT:
+      title: "Return Of Bleichenbacher’s Oracle Threat (ROBOT)"
+      author:
+      -
+        ins: H. Böck
+      -
+        ins: J. Somorovsky
+      -
+        ins: C. Young
+      seriesinfo: "27th USENIX Security Symposium"
+      date: 2018
 --- abstract
 
 The organizational separation between the operator of a TLS endpoint and the
@@ -557,8 +570,7 @@ that allow forging an RSA signature over an arbitrary message [BLEI].
 {{?RFC5246}} (Section 7.4.7.1.) describes a mitigation strategy requiring
 careful implementation for thwarting these attacks.
 Experience shows that in practice, server implementations may fail to fully
-thwary these attacks due to the complexity of this mitigation
-(TODO, NA: Should we cite the ROBOT paper here?).
+thwary these attacks due to the complexity of this mitigation [ROBOT].
 For TLS 1.2 servers that support RSA key exchange using a DC-enabled end-entity
 certificate, a hypothetical signature forgery attack would allow forging a
 signature over a delegated credential.
