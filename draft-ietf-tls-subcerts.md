@@ -577,7 +577,8 @@ extension for non-DC traffic; this completely prevents such attacks.
 # Acknowledgements
 
 Thanks to David Benjamin, Christopher Patton, Kyle Nekritz, Anirudh Ramachandran, Benjamin
-Kaduk, Kazuho Oku, Daniel Kahn Gillmor, Watson Ladd for their discussions, ideas,
+Kaduk, Kazuho Oku, Daniel Kahn Gillmor, Watson Ladd, Robert Merget, Juraj
+Somorovsky, Nimrod Aviram for their discussions, ideas,
 and bugs they have found.
 
 --- back
