@@ -1,7 +1,7 @@
 ---
 title: Delegated Credentials for TLS
 abbrev:
-docname: draft-ietf-tls-subcerts-07
+docname: draft-ietf-tls-subcerts-latest
 category: std
 
 ipr: trust200902
