@@ -72,8 +72,26 @@ informative:
         ins: D. Stebila
       seriesinfo: IEEE Trustcom/BigDataSE/ISPA 2015
       date: 2015
-
-
+  BLEI:
+      title: "Chosen Ciphertext Attacks against Protocols Based on RSA
+      Encryption Standard PKCS #1"
+      author:
+      -
+        ins: D. Bleichenbacher
+      seriesinfo: "Advances in Cryptology -- CRYPTO'98, LNCS vol. 1462, pages:
+      1-12"
+      date: 1998
+  ROBOT:
+      title: "Return Of Bleichenbacher’s Oracle Threat (ROBOT)"
+      author:
+      -
+        ins: H. Böck
+      -
+        ins: J. Somorovsky
+      -
+        ins: C. Young
+      seriesinfo: "27th USENIX Security Symposium"
+      date: 2018
 --- abstract
 
 The organizational separation between the operator of a TLS endpoint and the
@@ -545,10 +563,34 @@ clients, such as browsers in incognito mode, who do not trust the service might
 not want to advertise support for delegated credentials or limit the number of
 probes that a server can perform.
 
+## The impact of signature forgery attacks
+
+When TLS 1.2 servers support RSA key exchange, they may be vulnerable to attacks
+that allow forging an RSA signature over an arbitrary message [BLEI].
+{{?RFC5246}} (Section 7.4.7.1.) describes a mitigation strategy requiring
+careful implementation for thwarting these attacks.
+Experience shows that in practice, server implementations may fail to fully
+thwart these attacks due to the complexity of this mitigation [ROBOT].
+For TLS 1.2 servers that support RSA key exchange using a DC-enabled end-entity
+certificate, a hypothetical signature forgery attack would allow forging a
+signature over a delegated credential.
+The forged credential can then be used by the attacker as the equivalent of a
+man-in-the-middle certificate, valid for 7 days.
+
+Server operators should therefore minimize the risk of using DC-enabled
+end-entity certificates where a signature forgery oracle may be present.
+If possible, server operators may use DC-enabled certificates only for signing
+credentials, and not for serving non-DC TLS traffic.
+Furthermore, server operators may use elliptic curve certificates for DC-enabled
+traffic, while using RSA certificates without the DelegationUsage certificate
+extension for non-DC traffic; this completely prevents such attacks.
+
+
 # Acknowledgements
 
 Thanks to David Benjamin, Christopher Patton, Kyle Nekritz, Anirudh Ramachandran, Benjamin
-Kaduk, Kazuho Oku, Daniel Kahn Gillmor, Watson Ladd for their discussions, ideas,
+Kaduk, Kazuho Oku, Daniel Kahn Gillmor, Watson Ladd, Robert Merget, Juraj
+Somorovsky, Nimrod Aviram for their discussions, ideas,
 and bugs they have found.
 
 --- back
