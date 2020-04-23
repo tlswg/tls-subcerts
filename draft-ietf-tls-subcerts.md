@@ -303,9 +303,9 @@ The private key for a delegated credential can be used in place of a certificate
 private key, so it is important that the Front-End and Back-End are parties that
 have a trusted relationship in the diagram above.
 
-Short-lived certificates with automated certificate issuance,
-e.g., with Automated Certificate Managment Environment (ACME) {{?RFC8555}}
-reduce the risk of key compromise, but has its limitations.
+Use of short-lived certificates with automated certificate issuance,
+e.g., with Automated Certificate Managment Environment (ACME) {{?RFC8555}},
+reduces the risk of key compromise, but has several limitations.
 Specifically, it introduces operationally-critical interactions with a
 external party and forces the the server operator dependent on the CA's
 willingness to issue certificates with sufficiently short lifetimes.  It also
