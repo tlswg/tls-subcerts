@@ -82,7 +82,7 @@ informative:
       1-12"
       date: 1998
   ROBOT:
-      title: "Return Of Bleichenbacher’s Oracle Threat (ROBOT)"
+      title: "Return Of Bleichenbacher's Oracle Threat (ROBOT)"
       author:
       -
         ins: H. Böck
@@ -114,28 +114,25 @@ dependent on the CA for some aspects of its operations, for example:
 
 * Whenever the server operator wants to deploy a new certificate, it has to
   interact with the CA.
-* The server operator can only use TLS authentication schemes for which the CA
+* The server operator can only use TLS signature schemes for which the CA
   will issue credentials.
 
-These dependencies cause problems in practice.  Server operators often want to
-create short-lived certificates for servers in low-trust zones such as Content
-Delivery Networks (CDNs) or remote data centers.  This allows server operators
-to limit the exposure of keys in cases where they do not realize a compromise
-has occurred.  However, the risk inherent in cross-organizational transactions makes it
-operationally infeasible to rely on an external CA for such short-lived credentials.
-For instance, in the case of Online Certificate Status Protocol (OCSP) stapling
-(i.e., using the Certificate Status extension type ocsp {{?RFC8446}}), a CA may fail
-to deliver OCSP stapled response.  While this will result in degraded performance,
-the ramifications of failing to deliver short-lived certificates are even worse: the
-service that depends on those certificates would go down entirely.  Thus, ensuring
-independence from CAs for short-lived certificates is critical to the uptime of a
-service.
+These dependencies cause problems in practice.  Server operators often deploy
+TLS termination services in locations such as remote data centers
+or Content Delivery Networks (CDNs) where it may be difficult to detect key
+compromises.  Short-lived certificates may be used to limit the exposure of keys
+in these cases.
 
-To remove these dependencies, this document proposes a limited delegation
+However, short-lived certificates need to be renewed more frequently than
+long-lived certificates.  If an external CA is unable to issue a certificate in
+time to replace a deployed certificate, the server would no longer be able to
+present a valid certificate to clients.  With short-lived certificates, there is
+a smaller window of time to renew a certificates and therefore a higher risk that
+an outage at a CA will negatively affect the uptime of the service.
+
+To reduce the dependency on external CAs, this document proposes a limited delegation
 mechanism that allows a TLS peer to issue its own credentials within
-the scope of a certificate issued by an external CA.  Because the above
-problems do not relate to the CA's inherent function of validating possession of
-names, it is safe to make such delegations as long as they only enable the
+the scope of a certificate issued by an external CA.  These credentials only enable the
 recipient of the delegation to speak for names that the CA has authorized.  For
 clarity, we will refer to the certificate issued by the CA as a "certificate",
 or "delegation certificate", and the one issued by the operator as a "delegated
@@ -153,6 +150,17 @@ capitals, as shown here.
 ## Change Log
 
 (\*) indicates changes to the wire protocol.
+
+draft-08
+
+   * Include details about the impact of signature forgery attacks
+   * Copy edits
+   * Fix section about DC reuse
+   * Incorporate feedback from Jonathan Hammell and Kevin Jacobs on the list
+
+draft-07
+
+   * Minor text improvements
 
 draft-06
 
@@ -197,18 +205,18 @@ from the certificate that is issued to the peer.  The secret key
 used to sign a credential corresponds to the public key of the peer's
 X.509 end-entity certificate {{RFC5280}}.
 
-A TLS handshake that uses delegated credentials differs from a normal handshake
+A TLS handshake that uses delegated credentials differs from a standard handshake
 in a few important ways:
 
 * The initiating peer provides an extension in its ClientHello or CertificateRequest
   that indicates support for this mechanism.
 * The peer sending the Certificate message provides both the certificate
   chain terminating in its certificate as well as the delegated credential.
-* The authenticating intitiator uses information from the peer's certificate
+* The authenticating initiator uses information from the peer's certificate
   to verify the delegated credential and that the peer is asserting an
   expected identity.
-* Peers accepting the delegated credential use it as the certificate's
-  working key for the TLS hadshake
+* Peers accepting the delegated credential use it as the certificate
+  key for the TLS handshake
 
 As detailed in {{delegated-credentials}}, the delegated credential is
 cryptographically bound to the end-entity certificate with which the
@@ -291,21 +299,24 @@ Client            Front-End            Back-End
 
 These two mechanisms can be complementary.  A server could use credentials for
 clients that support them, while using [KEYLESS] to support legacy clients.
+The private key for a delegated credential can be used in place of a certificate
+private key, so it is important that the Front-End and Back-End are parties that
+have a trusted relationship.
 
-It is possible to address the short-lived certificate concerns above by
-automating certificate issuance, e.g., with Automated Certificate Managmeent
-Encvironment (ACME) {{?RFC8555}}.  In addition to requiring frequent
-operationally-critical interactions with an external party, this makes
-the server operator dependent on the CA's willingness to issue certificates
-with sufficiently short lifetimes.  It also fails to address the issues with
-algorithm support.  Nonetheless, existing automated issuance APIs like ACME
-may be useful for provisioning credentials within an operator network.
+Use of short-lived certificates with automated certificate issuance,
+e.g., with Automated Certificate Managment Environment (ACME) {{?RFC8555}},
+reduces the risk of key compromise, but has several limitations.
+Specifically, it introduces an operationally-critical dependency on an
+external party.  It also
+limits the types of algorithms supported for TLS authentication to those
+the CA is willing to issue a certificate for.  Nonetheless, existing
+automated issuance APIs like ACME may be useful for provisioning delegated credentials.
 
 
 # Delegated Credentials
 
 While X.509 forbids end-entity certificates from being used as issuers for
-other certificates, it is perfectly fine to use them to issue other signed
+other certificates, it is valid to use them to issue other signed
 objects as long as the certificate contains the digitalSignature KeyUsage
 ({{RFC5280}} section 4.2.1.3).  We define a new signed object format that would
 encode only the semantics that are needed for this application.  The credential
@@ -321,8 +332,8 @@ has the following structure:
 
 valid_time:
 
-: Relative time in seconds from the beginning of the delegation certificate's
-  notBefore value after which the delegated credential is no longer valid.
+: Time in seconds relative to the beginning of the delegation certificate's
+  notBefore value after which the delegated credential is no longer valid. This MUST NOT exceed 7 days.
 
 expected_cert_verify_algorithm:
 
@@ -372,8 +383,7 @@ The signature of the DelegatedCredential is computed over the concatenation of:
 The signature effectively binds the credential to the parameters of the
 handshake in which it is used.  In particular, it ensures that credentials are
 only used with the certificate and signature algorithm chosen by the
-delegator.  Minimizing their semantics in this way is intended to mitigate the
-risk of cross protocol attacks involving delegated credentials.
+delegator.
 
 The code changes required in order to create and verify delegated credentials,
 and the implementation complexity this entails, are localized to the TLS
@@ -453,18 +463,21 @@ delegated credentials MUST terminate the connection with an
 
 On receiving a delegated credential and a certificate chain, the peer
 validates the certificate chain and matches the end-entity certificate to the
-peer's expected identity in the usual way.  It also takes the following steps:
+peer's expected identity.  It also takes the following steps:
 
-1. Verify that the current time is within the validity interval of the credential
-   and that the credential's time to live is no more than the maximum validity
-   period. This is done by asserting that the current time is no more than the
+1. Verify that the current time is within the validity interval of the credential.
+   This is done by asserting that the current time is no more than the
    delegation certificate's notBefore value plus DelegatedCredential.cred.valid_time.
-2. Verify that expected_cert_verify_algorithm matches
+2  Verify that the credential's remaining validity time is no more than the maximum validity
+   period. This is done by asserting that the current time is no more than the delegation
+   certificate's notBefore value plus DelegatedCredential.cred.valid_time plus
+   the maximum validity period.
+3. Verify that expected_cert_verify_algorithm matches
    the scheme indicated in the peer's CertificateVerify message and that the
    algorithm is allowed for use with delegated credentials.
-3. Verify that the end-entity certificate satisfies the conditions in
+4. Verify that the end-entity certificate satisfies the conditions in
    {{certificate-requirements}}.
-4. Use the public key in the peer's end-entity certificate to verify the
+5. Use the public key in the peer's end-entity certificate to verify the
    signature of the credential using the algorithm indicated by
    DelegatedCredential.algorithm.
 
@@ -519,24 +532,23 @@ Cloudflare's IANA Private Enterprise Number (PEN) arc.
 
 # Security Considerations
 
-## Security of delegated private key
+## Security of delegated credential's private key
 
-Delegated credentials limit the exposure of the TLS private key by limiting
-its validity.  An attacker who compromises the private key of a delegated
-credential can act as a man-in-the-middle until the delegate credential expires,
-however they cannot create new delegated credentials.  Thus, delegated
+Delegated credentials limit the exposure of the private key used in a TLS connection by limiting
+its validity period.  An attacker who compromises the private key of a delegated
+credential can act as a man-in-the-middle until the delegated credential expires.
+However, they cannot create new delegated credentials.  Thus, delegated
 credentials should not be used to send a delegation to an untrusted party, but
 is meant to be used between parties that have some trust relationship with each
-other.  The secrecy of the delegated private key is thus important and several
+other.  The secrecy of the delegated credential's private key is thus important and
 access control mechanisms SHOULD be used to protect it, including file system
 controls, physical security, or hardware security modules.
 
 
 ## Re-use of delegated credentials in multiple contexts
 
-It is possible to use the same delegated credential for both client and server
-authentication if the Certificate allows it.  This is safe because the context
-string used for delegated credentials is distinct in both contexts.
+It is not possible to use the same delegated credential for both client and server
+authentication because issuing parties compute the corresponding signature using a context string unique to the intended role (client or server).
 
 
 ## Revocation of delegated credentials
@@ -548,7 +560,7 @@ delegated credential also implicitly revokes the delegated credential.
 
 ## Interactions with session resumption
 
-If a client decides to cache the certificate chain an re-validate it
+If a client decides to cache the certificate chain and re-validate it
 when resuming a connection, the client SHOULD also cache the associated
 delegated credential and re-validate it.
 
@@ -567,19 +579,19 @@ probes that a server can perform.
 
 When TLS 1.2 servers support RSA key exchange, they may be vulnerable to attacks
 that allow forging an RSA signature over an arbitrary message [BLEI].
-{{?RFC5246}} (Section 7.4.7.1.) describes a mitigation strategy requiring
-careful implementation for thwarting these attacks.
+TLS 1.2 {{?RFC5246}} (Section 7.4.7.1.) describes a mitigation strategy requiring
+careful implementation of timing resistant countermeasures for preventing these attacks.
 Experience shows that in practice, server implementations may fail to fully
-thwart these attacks due to the complexity of this mitigation [ROBOT].
+stop these attacks due to the complexity of this mitigation [ROBOT].
 For TLS 1.2 servers that support RSA key exchange using a DC-enabled end-entity
 certificate, a hypothetical signature forgery attack would allow forging a
 signature over a delegated credential.
-The forged credential can then be used by the attacker as the equivalent of a
+The forged credential could then be used by the attacker as the equivalent of a
 man-in-the-middle certificate, valid for 7 days.
 
 Server operators should therefore minimize the risk of using DC-enabled
 end-entity certificates where a signature forgery oracle may be present.
-If possible, server operators may use DC-enabled certificates only for signing
+If possible, server operators may choose to use DC-enabled certificates only for signing
 credentials, and not for serving non-DC TLS traffic.
 Furthermore, server operators may use elliptic curve certificates for DC-enabled
 traffic, while using RSA certificates without the DelegationUsage certificate
