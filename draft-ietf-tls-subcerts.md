@@ -301,7 +301,7 @@ These two mechanisms can be complementary.  A server could use credentials for
 clients that support them, while using [KEYLESS] to support legacy clients.
 The private key for a delegated credential can be used in place of a certificate
 private key, so it is important that the Front-End and Back-End are parties that
-have a trusted relationship in the diagram above.
+have a trusted relationship.
 
 Use of short-lived certificates with automated certificate issuance,
 e.g., with Automated Certificate Managment Environment (ACME) {{?RFC8555}},
