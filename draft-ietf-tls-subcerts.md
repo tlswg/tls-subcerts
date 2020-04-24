@@ -306,7 +306,7 @@ have a trusted relationship in the diagram above.
 Use of short-lived certificates with automated certificate issuance,
 e.g., with Automated Certificate Managment Environment (ACME) {{?RFC8555}},
 reduces the risk of key compromise, but has several limitations.
-Specifically, it introduces operationally-critical interactions with an
+Specifically, it introduces an operationally-critical dependency on an
 external party and forces a server operator dependency on the CA's
 willingness to issue certificates with sufficiently short lifetimes.  It also
 limits the types of algorithms supported for TLS authentication to those
