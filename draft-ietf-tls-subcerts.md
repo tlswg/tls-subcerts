@@ -334,7 +334,7 @@ has the following structure:
 valid_time:
 
 : Time in seconds relative to the beginning of the delegation certificate's
-  notBefore value after which the delegated credential is no longer valid (must not exceed 7 days).
+  notBefore value after which the delegated credential is no longer valid. This MUST NOT exceed 7 days.
 
 expected_cert_verify_algorithm:
 
