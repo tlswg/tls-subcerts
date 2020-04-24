@@ -42,7 +42,6 @@ normative:
         org: ITU-T
       seriesinfo:
         ISO/IEC: 8824-1:2015
-
   X.690:
       title: "Information technology - ASN.1 encoding Rules: Specification of Basic Encoding Rules (BER), Canonical Encoding Rules (CER) and Distinguished Encoding Rules (DER)"
       date: November 2015
@@ -92,6 +91,7 @@ informative:
         ins: C. Young
       seriesinfo: "27th USENIX Security Symposium"
       date: 2018
+
 --- abstract
 
 The organizational separation between the operator of a TLS endpoint and the
