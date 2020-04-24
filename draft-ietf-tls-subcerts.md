@@ -541,7 +541,7 @@ credential can act as a man-in-the-middle until the delegated credential expires
 However, they cannot create new delegated credentials.  Thus, delegated
 credentials should not be used to send a delegation to an untrusted party, but
 is meant to be used between parties that have some trust relationship with each
-other.  The secrecy of the delegated credential's private key is thus important and several
+other.  The secrecy of the delegated credential's private key is thus important and
 access control mechanisms SHOULD be used to protect it, including file system
 controls, physical security, or hardware security modules.
 
