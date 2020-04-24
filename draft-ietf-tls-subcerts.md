@@ -85,7 +85,7 @@ informative:
       title: "Return Of Bleichenbacher's Oracle Threat (ROBOT)"
       author:
       -
-        ins: H. Böck
+        ins: H. Boeck
       -
         ins: J. Somorovsky
       -
