@@ -549,7 +549,7 @@ controls, physical security, or hardware security modules.
 ## Re-use of delegated credentials in multiple contexts
 
 It is not possible to use the same delegated credential for both client and server
-authentication because the signature contains a context string.
+authentication because issuing parties compute the corresponding signature using a context string unique to the intended role (client or server).
 
 
 ## Revocation of delegated credentials
