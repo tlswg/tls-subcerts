@@ -151,6 +151,10 @@ capitals, as shown here.
 
 (\*) indicates changes to the wire protocol.
 
+draft-09
+
+   * Address case nits
+
 draft-08
 
    * Include details about the impact of signature forgery attacks
@@ -390,7 +394,7 @@ and the implementation complexity this entails, are localized to the TLS
 stack.  This has the advantage of avoiding changes to security-critical and
 often delicate PKI code.
 
-## Client and Server behavior
+## Client and Server Behavior
 
 This document defines the following TLS extension code point.
 
@@ -402,7 +406,7 @@ This document defines the following TLS extension code point.
    } ExtensionType;
 ~~~~~~~~~~
 
-### Server authentication
+### Server Authentication
 
 A client which supports this specification SHALL send a
 "delegated_credential" extension in its ClientHello. The body of the extension
@@ -432,7 +436,7 @@ considered invalid otherwise.  Clients that receive invalid delegated
 credentials MUST terminate the connection with an "illegal_parameter"
 alert.
 
-### Client authentication
+### Client Authentication
 
 A server that supports this specification SHALL send a
 "delegated_credential" extension in the CertificateRequest message
@@ -532,7 +536,7 @@ Cloudflare's IANA Private Enterprise Number (PEN) arc.
 
 # Security Considerations
 
-## Security of delegated credential's private key
+## Security of Delegated Credential's Private Key
 
 Delegated credentials limit the exposure of the private key used in a TLS connection by limiting
 its validity period.  An attacker who compromises the private key of a delegated
@@ -545,26 +549,26 @@ access control mechanisms SHOULD be used to protect it, including file system
 controls, physical security, or hardware security modules.
 
 
-## Re-use of delegated credentials in multiple contexts
+## Re-use of Delegated Credentials in Multiple Contexts
 
 It is not possible to use the same delegated credential for both client and server
 authentication because issuing parties compute the corresponding signature using a context string unique to the intended role (client or server).
 
 
-## Revocation of delegated credentials
+## Revocation of Delegated Credentials
 
 Delegated credentials do not provide any additional form of early revocation.
 Since it is short lived, the expiry of the delegated credential would revoke
 the credential.  Revocation of the long term private key that signs the
 delegated credential also implicitly revokes the delegated credential.
 
-## Interactions with session resumption
+## Interactions with Session Resumption
 
 If a client decides to cache the certificate chain and re-validate it
 when resuming a connection, the client SHOULD also cache the associated
 delegated credential and re-validate it.
 
-## Privacy considerations
+## Privacy Considerations
 
 Delegated credentials can be valid for 7 days and it is much easier for a
 service to create delegated credential than a certificate signed by a CA.  A
@@ -575,7 +579,7 @@ clients, such as browsers in incognito mode, who do not trust the service might
 not want to advertise support for delegated credentials or limit the number of
 probes that a server can perform.
 
-## The impact of signature forgery attacks
+## The Impact of Signature Forgery Attacks
 
 When TLS 1.2 servers support RSA key exchange, they may be vulnerable to attacks
 that allow forging an RSA signature over an arbitrary message [BLEI].
