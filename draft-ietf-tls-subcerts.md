@@ -601,6 +601,14 @@ Furthermore, server operators may use elliptic curve certificates for DC-enabled
 traffic, while using RSA certificates without the DelegationUsage certificate
 extension for non-DC traffic; this completely prevents such attacks.
 
+Note that if a signature can be forged over an arbitrary credential, the
+attacker can choose any value for the valid_time field.  Repeated signature
+forgeries therefore allow the attacker to create multiple delegated
+credentials that can cover the entire validity period of the
+certificate.  It is therefore safe to assume that temporary exposure
+of the key or a signing oracle implies that the attacker may be able to
+impersonate a server for the lifetime of the certificate.
+
 
 # Acknowledgements
 
