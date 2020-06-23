@@ -154,6 +154,7 @@ capitals, as shown here.
 draft-09
 
    * Address case nits
+   * Add text around using an oracle to forge DCs in the future and past
 
 draft-08
 
