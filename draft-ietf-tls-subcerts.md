@@ -154,6 +154,7 @@ capitals, as shown here.
 draft-09
 
    * Address case nits
+   * Add text about certificate extension vs EKU
 
 draft-08
 
@@ -516,6 +517,10 @@ certificate satisfies the following criteria:
 * It has the DelegationUsage extension.
 * It has the digitalSignature KeyUsage (see the KeyUsage extension defined in
   {{RFC5280}}).
+
+A new extension was chosen instead of adding a new Extended Key Usage
+(EKU) to be compatible with deployed TLS and PKI software stacks
+without requiring CAs to issue new intermediate certificates.
 
 
 # IANA Considerations
