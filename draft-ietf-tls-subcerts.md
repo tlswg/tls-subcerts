@@ -154,6 +154,8 @@ capitals, as shown here.
 draft-09
 
    * Address case nits
+   * Fix section bullets in 4.1.3.
+   * Add operational considerations section for clock skew
 
 draft-08
 
@@ -472,7 +474,7 @@ peer's expected identity.  It also takes the following steps:
 1. Verify that the current time is within the validity interval of the credential.
    This is done by asserting that the current time is no more than the
    delegation certificate's notBefore value plus DelegatedCredential.cred.valid_time.
-2  Verify that the credential's remaining validity time is no more than the maximum validity
+2. Verify that the credential's remaining validity time is no more than the maximum validity
    period. This is done by asserting that the current time is no more than the delegation
    certificate's notBefore value plus DelegatedCredential.cred.valid_time plus
    the maximum validity period.
@@ -516,6 +518,21 @@ certificate satisfies the following criteria:
 * It has the DelegationUsage extension.
 * It has the digitalSignature KeyUsage (see the KeyUsage extension defined in
   {{RFC5280}}).
+
+
+# Operational Considerations
+
+## Client Clock Skew
+
+One of the risks of deploying a short-lived credential system based
+on absolute time is client clock skew.  If a client's clock is sufficiently
+ahead or behind of the server's clock, then credentials that are valid
+from the server's perspective will be rejected by the client.  For deployment
+scenarios where clock skew is an issue, it may be preferable to issue
+multiple delegated credentials with overlapping validity periods and
+present to clients the delegated credential with extra leeway between
+the current time and both the begining and the end of the validity
+period.
 
 
 # IANA Considerations
