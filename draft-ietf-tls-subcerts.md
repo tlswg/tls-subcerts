@@ -205,7 +205,7 @@ draft-02
 A delegated credential is a digitally signed data structure with two semantic
 fields: a validity interval and a public key (along with its associated
 signature algorithm).  The signature on the credential indicates a delegation
-from the certificate that is issued to the peer.  The secret key
+from the certificate that is issued to the peer.  The private key
 used to sign a credential corresponds to the public key of the peer's
 X.509 end-entity certificate {{RFC5280}}.
 
