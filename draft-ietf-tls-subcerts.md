@@ -531,7 +531,7 @@ from the server's perspective will be rejected by the client.  For deployment
 scenarios where clock skew is an issue, it may be preferable to issue
 multiple delegated credentials with overlapping validity periods and
 present to clients the delegated credential with extra leeway between
-the current time and both the begining and the end of the validity
+the current time and both the beginning and the end of the validity
 period.
 
 
