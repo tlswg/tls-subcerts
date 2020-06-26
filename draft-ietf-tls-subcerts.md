@@ -154,6 +154,8 @@ capitals, as shown here.
 draft-09
 
    * Address case nits
+   * Fix section bullets in 4.1.3.
+   * Add operational considerations section for clock skew
    * Add text around using an oracle to forge DCs in the future and past
    * Add text about certificate extension vs EKU
 
@@ -474,7 +476,7 @@ peer's expected identity.  It also takes the following steps:
 1. Verify that the current time is within the validity interval of the credential.
    This is done by asserting that the current time is no more than the
    delegation certificate's notBefore value plus DelegatedCredential.cred.valid_time.
-2  Verify that the credential's remaining validity time is no more than the maximum validity
+2. Verify that the credential's remaining validity time is no more than the maximum validity
    period. This is done by asserting that the current time is no more than the delegation
    certificate's notBefore value plus DelegatedCredential.cred.valid_time plus
    the maximum validity period.
@@ -522,6 +524,20 @@ certificate satisfies the following criteria:
 A new extension was chosen instead of adding a new Extended Key Usage
 (EKU) to be compatible with deployed TLS and PKI software stacks
 without requiring CAs to issue new intermediate certificates.
+
+
+# Operational Considerations
+
+## Client Clock Skew
+
+One of the risks of deploying a short-lived credential system based
+on absolute time is client clock skew.  If a client's clock is sufficiently
+ahead or behind of the server's clock, then clients will reject credentials 
+that are valid from the server's perspective.  Clock
+skew also affects the validity of the original certificates.  The lifetime
+of the delegated credential should be set taking clock skew into account.
+Clock skew may affect a delegated credential at the beginning and end of
+its validity periods, which should also be taken into account.
 
 
 # IANA Considerations
