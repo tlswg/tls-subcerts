@@ -155,6 +155,7 @@ draft-09
 
    * Address case nits
    * Add text around using an oracle to forge DCs in the future and past
+   * Add text about certificate extension vs EKU
 
 draft-08
 
@@ -206,7 +207,7 @@ draft-02
 A delegated credential is a digitally signed data structure with two semantic
 fields: a validity interval and a public key (along with its associated
 signature algorithm).  The signature on the credential indicates a delegation
-from the certificate that is issued to the peer.  The secret key
+from the certificate that is issued to the peer.  The private key
 used to sign a credential corresponds to the public key of the peer's
 X.509 end-entity certificate {{RFC5280}}.
 
@@ -517,6 +518,10 @@ certificate satisfies the following criteria:
 * It has the DelegationUsage extension.
 * It has the digitalSignature KeyUsage (see the KeyUsage extension defined in
   {{RFC5280}}).
+
+A new extension was chosen instead of adding a new Extended Key Usage
+(EKU) to be compatible with deployed TLS and PKI software stacks
+without requiring CAs to issue new intermediate certificates.
 
 
 # IANA Considerations
