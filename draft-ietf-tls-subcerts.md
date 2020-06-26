@@ -607,7 +607,7 @@ attacker can choose any value for the valid_time field.  Repeated signature
 forgeries therefore allow the attacker to create multiple delegated
 credentials that can cover the entire validity period of the
 certificate.  It is therefore safe to assume that temporary exposure
-of the key or a signing oracle implies that the attacker may be able to
+of the key or a signing oracle implies that the attacker can
 impersonate a server for the lifetime of the certificate.
 
 
