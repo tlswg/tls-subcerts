@@ -551,7 +551,7 @@ or Certificate (CT) messages in TLS 1.3 {{RFC8446}}.
 
 This document also defines an ASN.1 module for the DelegationUsage
 certificate extension in {{module}}.  IANA is requested to register an
-Object Identfiier (OID) for the ASN.1 in "SMI Security for PKIX Module
+Object Identfier (OID) for the ASN.1 in "SMI Security for PKIX Module
 Identifier" arc.  An OID for the DelegationUsage certificate extension
 is not needed as it is already assigned to the extension from
 Cloudflare's IANA Private Enterprise Number (PEN) arc.
