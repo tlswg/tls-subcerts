@@ -156,6 +156,8 @@ draft-09
    * Address case nits
    * Fix section bullets in 4.1.3.
    * Add operational considerations section for clock skew
+   * Add text around using an oracle to forge DCs in the future and past
+   * Add text about certificate extension vs EKU
 
 draft-08
 
@@ -207,7 +209,7 @@ draft-02
 A delegated credential is a digitally signed data structure with two semantic
 fields: a validity interval and a public key (along with its associated
 signature algorithm).  The signature on the credential indicates a delegation
-from the certificate that is issued to the peer.  The secret key
+from the certificate that is issued to the peer.  The private key
 used to sign a credential corresponds to the public key of the peer's
 X.509 end-entity certificate {{RFC5280}}.
 
@@ -519,6 +521,10 @@ certificate satisfies the following criteria:
 * It has the digitalSignature KeyUsage (see the KeyUsage extension defined in
   {{RFC5280}}).
 
+A new extension was chosen instead of adding a new Extended Key Usage
+(EKU) to be compatible with deployed TLS and PKI software stacks
+without requiring CAs to issue new intermediate certificates.
+
 
 # Operational Considerations
 
@@ -616,6 +622,13 @@ credentials, and not for serving non-DC TLS traffic.
 Furthermore, server operators may use elliptic curve certificates for DC-enabled
 traffic, while using RSA certificates without the DelegationUsage certificate
 extension for non-DC traffic; this completely prevents such attacks.
+
+Note that if a signature can be forged over an arbitrary credential, the
+attacker can choose any value for the valid_time field.  Repeated signature
+forgeries therefore allow the attacker to create multiple delegated
+credentials that can cover the entire validity period of the
+certificate.  Temporary exposure of the key or a signing oracle may
+allow the attacker to impersonate a server for the lifetime of the certificate.
 
 
 # Acknowledgements
