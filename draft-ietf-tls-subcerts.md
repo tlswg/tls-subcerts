@@ -527,12 +527,11 @@ certificate satisfies the following criteria:
 One of the risks of deploying a short-lived credential system based
 on absolute time is client clock skew.  If a client's clock is sufficiently
 ahead or behind of the server's clock, then credentials that are valid
-from the server's perspective will be rejected by the client.  For deployment
-scenarios where clock skew is an issue, it may be preferable to issue
-multiple delegated credentials with overlapping validity periods and
-present to clients the delegated credential with extra leeway between
-the current time and both the beginning and the end of the validity
-period.
+from the server's perspective will be rejected by the client.  Clock
+skew also affects the validity of the original certificates.  The lifetime
+of the delegated credential should be set taking clock skew into account.
+Clock skew may affect a delegated credential at the beginning and end of
+its validity periods, which should also be taken into account.
 
 
 # IANA Considerations
