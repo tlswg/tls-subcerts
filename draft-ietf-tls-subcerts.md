@@ -393,6 +393,10 @@ The signature of the DelegatedCredential is computed over the concatenation of:
 5. DelegatedCredential.cred.
 6. DelegatedCredential.algorithm.
 
+The private key in the peer's end-entity certificate is used to sign this
+concatenation of values by using the algorithm indicated by DelegatedCredential.algorithm
+This creates the signature.
+
 The signature effectively binds the credential to the parameters of the
 handshake in which it is used.  In particular, it ensures that credentials are
 only used with the certificate and signature algorithm chosen by the
@@ -587,9 +591,10 @@ authentication because issuing parties compute the corresponding signature using
 ## Revocation of Delegated Credentials
 
 Delegated credentials do not provide any additional form of early revocation.
-Since it is short lived, the expiry of the delegated credential would revoke
+Since it is short lived, the expiry of the delegated credential revokes
 the credential.  Revocation of the long term private key that signs the
-delegated credential also implicitly revokes the delegated credential.
+delegated credential (from the end-entity certificate) also implicitly revokes
+the delegated credential.
 
 ## Interactions with Session Resumption
 
