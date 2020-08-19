@@ -236,10 +236,10 @@ protocol is not allowed.
 Delegated credentials allow a peer to terminate TLS connections on behalf of
 the certificate owner.  If a credential is stolen, there is no mechanism for
 revoking it without revoking the certificate itself.  To limit exposure in case
-of delegated credential's private key compromise, delegated credentials have a maximum
-validity period.  In the absence of an application profile standard specifying
-otherwise, the maximum validity period is set to 7 days.  Peers MUST NOT issue
-credentials with a validity period longer than the maximum validity period.
+of the compromise of a delegated credential's private key, delegated credentials
+have a maximum validity period.  In the absence of an application profile standard
+specifying otherwise, the maximum validity period is set to 7 days.  Peers MUST
+NOT issue credentials with a validity period longer than the maximum validity period.
 This mechanism is described in detail in {{client-and-server-behavior}}.
 
 It was noted in [XPROT] that certificates in use by servers that support
@@ -310,7 +310,7 @@ These two mechanisms can be complementary.  A server could use delegated credent
 for clients that support them, while using [KEYLESS] to support legacy clients.
 The private key for a delegated credential can be used in place of a certificate
 private key, so it is important that the Front-End and Back-End are parties
-have a trusted relationship.
+with a trusted relationship.
 
 Use of short-lived certificates with automated certificate issuance,
 e.g., with Automated Certificate Managment Environment (ACME) {{?RFC8555}},
@@ -349,8 +349,8 @@ expected_cert_verify_algorithm:
 : The signature algorithm of the Credential key pair, where the type
   SignatureScheme is as defined in {{RFC8446}}. This is expected to be
   the same as CertificateVerify.algorithm sent by the server.  Only signature
-  algorithms allowed for use in Certificate Verify messages are allowed.  When
-  using RSA, the public key MUST NOT use the rsaEncryption OID. As a result,
+  algorithms allowed for use in CertificateVerify messages are allowed.  When
+  using RSA, the public key MUST NOT use the rsaEncryption OID.  As a result,
   the following algorithms are not allowed for use with delegated credentials:
   rsa_pss_rsae_sha256, rsa_pss_rsae_sha384, rsa_pss_rsae_sha512.
 
@@ -359,7 +359,7 @@ ASN1_subjectPublicKeyInfo:
 : The Credential's public key, a DER-encoded {{X.690}} SubjectPublicKeyInfo as defined in
 {{RFC5280}}.
 
-The Delegated Credential has the following structure:
+The DelegatedCredential has the following structure:
 
 ~~~~~~~~~~
    struct {
@@ -375,13 +375,13 @@ cred:
 
 algorithm:
 
-: The signature algorithm used to verify the DelegatedCredential.signature.
+: The signature algorithm used to verify DelegatedCredential.signature.
 
 signature:
 
 : The delegation, a signature that binds the credential to the end-entity
   certificate's public key as specified below. The signature scheme is specified
-  by the DelegatedCredential.algorithm.
+  by DelegatedCredential.algorithm.
 
 The signature of the DelegatedCredential is computed over the concatenation of:
 
@@ -393,9 +393,8 @@ The signature of the DelegatedCredential is computed over the concatenation of:
 5. DelegatedCredential.cred.
 6. DelegatedCredential.algorithm.
 
-The private key in the peer's end-entity certificate is used to sign this
-concatenation of values by using the algorithm indicated by DelegatedCredential.algorithm
-This creates the signature.
+The signature is computed by using the private key of the peer's end-entity
+certificate, with the algorithm indicated by DelegatedCredential.algorithm.
 
 The signature effectively binds the credential to the parameters of the
 handshake in which it is used.  In particular, it ensures that credentials are
@@ -444,7 +443,7 @@ CertificateEntry of its end-entity certificate; the client SHOULD ignore
 delegated credentials sent as extensions to any other certificate.
 
 The expected_cert_verify_algorithm field MUST be of a
-type advertised by the client in the SignatureSchemeList and it is
+type advertised by the client in the SignatureSchemeList and is
 considered invalid otherwise.  Clients that receive invalid delegated
 credentials MUST terminate the connection with an "illegal_parameter"
 alert.
@@ -490,7 +489,7 @@ peer's expected identity.  It also takes the following steps:
    certificate's notBefore value plus DelegatedCredential.cred.valid_time plus
    the maximum validity period.
 3. Verify that expected_cert_verify_algorithm matches
-   the scheme indicated in the peer's Certificate Verify message and that the
+   the scheme indicated in the peer's CertificateVerify message and that the
    algorithm is allowed for use with delegated credentials.
 4. Verify that the end-entity certificate satisfies the conditions in
    {{certificate-requirements}}.
@@ -503,8 +502,8 @@ invalid.  Clients and servers that receive invalid delegated credentials MUST te
 connection with an "illegal_parameter" alert.
 
 If successful, the participant receiving the Certificate message uses the public
-key in the DelegatedCredential.cred to verify the signature in the peer's
-Certificate Verify message.
+key in DelegatedCredential.cred to verify the signature in the peer's
+CertificateVerify message.
 
 ## Certificate Requirements
 
@@ -625,7 +624,7 @@ For TLS 1.2 servers that support RSA key exchange using a DC-enabled end-entity
 certificate, a hypothetical signature forgery attack would allow forging a
 signature over a delegated credential.
 The forged delegated credential could then be used by the attacker as the equivalent of a
-man-in-the-middle certificate, valid for maximum 7 days.
+man-in-the-middle certificate, valid for a maximum of 7 days.
 
 Server operators should therefore minimize the risk of using DC-enabled
 end-entity certificates where a signature forgery oracle may be present.
