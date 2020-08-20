@@ -133,8 +133,9 @@ an outage at a CA will negatively affect the uptime of the service.
 To reduce the dependency on external CAs, this document proposes a limited delegation
 mechanism that allows a TLS peer to issue its own credentials within
 the scope of a certificate issued by an external CA.  These credentials only enable the
-recipient of the delegation to speak for names that the CA has authorized.  For
-clarity, we will refer to the certificate issued by the CA as a "certificate",
+recipient of the delegation to speak for names that the CA has authorized.
+
+We will refer to the certificate issued by the CA as a "certificate",
 or "delegation certificate", and the one issued by the operator as a "delegated
 credential" or "DC".
 
@@ -206,9 +207,9 @@ draft-02
 
 # Solution Overview
 
-A delegated credential is a digitally signed data structure with two semantic
+A delegated credential (DC) is a digitally signed data structure with two semantic
 fields: a validity interval and a public key (along with its associated
-signature algorithm).  The signature on the credential indicates a delegation
+signature algorithm).  The signature on the delegated credential indicates a delegation
 from the certificate that is issued to the peer.  The private key
 used to sign a credential corresponds to the public key of the peer's
 X.509 end-entity certificate {{RFC5280}}.
@@ -235,10 +236,10 @@ protocol is not allowed.
 Delegated credentials allow a peer to terminate TLS connections on behalf of
 the certificate owner.  If a credential is stolen, there is no mechanism for
 revoking it without revoking the certificate itself.  To limit exposure in case
-of delegated credential private key compromise, delegated credentials have a maximum
-validity period.  In the absence of an application profile standard specifying
-otherwise, the maximum validity period is set to 7 days.  Peers MUST NOT issue
-credentials with a validity period longer than the maximum validity period.
+of the compromise of a delegated credential's private key, delegated credentials
+have a maximum validity period.  In the absence of an application profile standard
+specifying otherwise, the maximum validity period is set to 7 days.  Peers MUST
+NOT issue credentials with a validity period longer than the maximum validity period.
 This mechanism is described in detail in {{client-and-server-behavior}}.
 
 It was noted in [XPROT] that certificates in use by servers that support
@@ -294,7 +295,7 @@ Client            Front-End            Back-End
   |        ...        |                    |
 
 
-Delegated credentials:
+Delegated Credential:
 
 Client            Front-End            Back-End
   |                   |<--DC distribution->|
@@ -305,11 +306,11 @@ Client            Front-End            Back-End
   |        ...        |                    |
 ~~~~~~~~~~
 
-These two mechanisms can be complementary.  A server could use credentials for
-clients that support them, while using [KEYLESS] to support legacy clients.
+These two mechanisms can be complementary.  A server could use delegated credentials
+for clients that support them, while using [KEYLESS] to support legacy clients.
 The private key for a delegated credential can be used in place of a certificate
-private key, so it is important that the Front-End and Back-End are parties that
-have a trusted relationship.
+private key, so it is important that the Front-End and Back-End are parties
+with a trusted relationship.
 
 Use of short-lived certificates with automated certificate issuance,
 e.g., with Automated Certificate Managment Environment (ACME) {{?RFC8555}},
@@ -327,7 +328,7 @@ While X.509 forbids end-entity certificates from being used as issuers for
 other certificates, it is valid to use them to issue other signed
 objects as long as the certificate contains the digitalSignature KeyUsage
 ({{RFC5280}} section 4.2.1.3).  We define a new signed object format that would
-encode only the semantics that are needed for this application.  The credential
+encode only the semantics that are needed for this application.  The Credential
 has the following structure:
 
 ~~~~~~~~~~
@@ -345,20 +346,20 @@ valid_time:
 
 expected_cert_verify_algorithm:
 
-: The signature algorithm of the credential key pair, where the type
+: The signature algorithm of the Credential key pair, where the type
   SignatureScheme is as defined in {{RFC8446}}. This is expected to be
   the same as CertificateVerify.algorithm sent by the server.  Only signature
   algorithms allowed for use in CertificateVerify messages are allowed.  When
-  using RSA, the public key MUST NOT use the rsaEncryption OID, as a result,
+  using RSA, the public key MUST NOT use the rsaEncryption OID.  As a result,
   the following algorithms are not allowed for use with delegated credentials:
   rsa_pss_rsae_sha256, rsa_pss_rsae_sha384, rsa_pss_rsae_sha512.
 
 ASN1_subjectPublicKeyInfo:
 
-: The credential's public key, a DER-encoded {{X.690}} SubjectPublicKeyInfo as defined in
+: The Credential's public key, a DER-encoded {{X.690}} SubjectPublicKeyInfo as defined in
 {{RFC5280}}.
 
-The delegated credential has the following structure:
+The DelegatedCredential has the following structure:
 
 ~~~~~~~~~~
    struct {
@@ -367,6 +368,10 @@ The delegated credential has the following structure:
      opaque signature<0..2^16-1>;
    } DelegatedCredential;
 ~~~~~~~~~~
+
+cred:
+
+: The Credential structure as previously defined.
 
 algorithm:
 
@@ -381,12 +386,15 @@ signature:
 The signature of the DelegatedCredential is computed over the concatenation of:
 
 1. A string that consists of octet 32 (0x20) repeated 64 times.
-2. The context string "TLS, server delegated credentials" for servers and "TLS, client delegated credentials" for clients.
+2. The context string "TLS, server delegated credentials" for server authentication and "TLS, client delegated credentials" for client authentication.
 3. A single 0 byte, which serves as the separator.
 4. The DER-encoded X.509 end-entity certificate used to sign the
    DelegatedCredential.
 5. DelegatedCredential.cred.
 6. DelegatedCredential.algorithm.
+
+The signature is computed by using the private key of the peer's end-entity
+certificate, with the algorithm indicated by DelegatedCredential.algorithm.
 
 The signature effectively binds the credential to the parameters of the
 handshake in which it is used.  In particular, it ensures that credentials are
@@ -491,9 +499,11 @@ peer's expected identity.  It also takes the following steps:
 
 If one or more of these checks fail, then the delegated credential is deemed
 invalid.  Clients and servers that receive invalid delegated credentials MUST terminate the
-connection with an "illegal_parameter" alert.  If successful, the participant
-receiving the Certificate message uses the public key in the credential to verify
-the signature in the peer's CertificateVerify message.
+connection with an "illegal_parameter" alert.
+
+If successful, the participant receiving the Certificate message uses the public
+key in DelegatedCredential.cred to verify the signature in the peer's
+CertificateVerify message.
 
 ## Certificate Requirements
 
@@ -532,7 +542,7 @@ without requiring CAs to issue new intermediate certificates.
 
 One of the risks of deploying a short-lived credential system based
 on absolute time is client clock skew.  If a client's clock is sufficiently
-ahead or behind of the server's clock, then clients will reject credentials 
+ahead or behind of the server's clock, then clients will reject delegated credentials
 that are valid from the server's perspective.  Clock
 skew also affects the validity of the original certificates.  The lifetime
 of the delegated credential should be set taking clock skew into account.
@@ -580,9 +590,10 @@ authentication because issuing parties compute the corresponding signature using
 ## Revocation of Delegated Credentials
 
 Delegated credentials do not provide any additional form of early revocation.
-Since it is short lived, the expiry of the delegated credential would revoke
+Since it is short lived, the expiry of the delegated credential revokes
 the credential.  Revocation of the long term private key that signs the
-delegated credential also implicitly revokes the delegated credential.
+delegated credential (from the end-entity certificate) also implicitly revokes
+the delegated credential.
 
 ## Interactions with Session Resumption
 
@@ -593,7 +604,7 @@ delegated credential and re-validate it.
 ## Privacy Considerations
 
 Delegated credentials can be valid for 7 days and it is much easier for a
-service to create delegated credential than a certificate signed by a CA.  A
+service to create delegated credentials than a certificate signed by a CA.  A
 service could determine the client time and clock skew by creating several
 delegated credentials with different expiry timestamps and observing whether the
 client would accept it.  Client time could be unique and thus privacy sensitive
@@ -612,8 +623,8 @@ stop these attacks due to the complexity of this mitigation [ROBOT].
 For TLS 1.2 servers that support RSA key exchange using a DC-enabled end-entity
 certificate, a hypothetical signature forgery attack would allow forging a
 signature over a delegated credential.
-The forged credential could then be used by the attacker as the equivalent of a
-man-in-the-middle certificate, valid for 7 days.
+The forged delegated credential could then be used by the attacker as the equivalent of a
+man-in-the-middle certificate, valid for a maximum of 7 days.
 
 Server operators should therefore minimize the risk of using DC-enabled
 end-entity certificates where a signature forgery oracle may be present.
