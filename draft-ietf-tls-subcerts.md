@@ -135,7 +135,7 @@ mechanism that allows a TLS peer to issue its own credentials within
 the scope of a certificate issued by an external CA.  These credentials only enable the
 recipient of the delegation to speak for names that the CA has authorized.  Furthermore,
 this mechanism allows the server to use modern signature algorithms such as
-ed25519 even if their CA does not support them.
+Ed25519 {{?RFC8032}} even if their CA does not support them.
 
 We will refer to the certificate issued by the CA as a "certificate",
 or "delegation certificate", and the one issued by the operator as a "delegated
