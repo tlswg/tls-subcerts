@@ -152,7 +152,13 @@ capitals, as shown here.
 
 ## Change Log
 
+RFC EDITOR PLEASE DELETE THIS SECTION.
+
 (\*) indicates changes to the wire protocol.
+
+draft-10
+   * Address superficial comments
+   * Add example certificate
 
 draft-09
 
