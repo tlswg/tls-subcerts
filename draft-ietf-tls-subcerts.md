@@ -345,7 +345,7 @@ valid_time:
 
 : Time in seconds relative to the beginning of the delegation certificate's
   notBefore value after which the delegated credential is no longer valid.
-  Credentials with valid_times exceeding 7 days will be rejected (as described
+  Endpoints will reject delegate credentials with valid_times exceeding 7 days (as described
   in {{client-and-server-behavior}}).
 
 expected_cert_verify_algorithm:
