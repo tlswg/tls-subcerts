@@ -133,7 +133,9 @@ an outage at a CA will negatively affect the uptime of the service.
 To reduce the dependency on external CAs, this document proposes a limited delegation
 mechanism that allows a TLS peer to issue its own credentials within
 the scope of a certificate issued by an external CA.  These credentials only enable the
-recipient of the delegation to speak for names that the CA has authorized.
+recipient of the delegation to speak for names that the CA has authorized.  Furthermore,
+this mechanism allows the server to use modern signature algorithms such as
+Ed25519 {{?RFC8032}} even if their CA does not support them.
 
 We will refer to the certificate issued by the CA as a "certificate",
 or "delegation certificate", and the one issued by the operator as a "delegated
@@ -150,7 +152,13 @@ capitals, as shown here.
 
 ## Change Log
 
+RFC EDITOR PLEASE DELETE THIS SECTION.
+
 (\*) indicates changes to the wire protocol.
+
+draft-10
+   * Address superficial comments
+   * Add example certificate
 
 draft-09
 
@@ -266,8 +274,8 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
   the same public key, with different X.509 parameters.  Delegated credentials,
   which rely on a cryptographic binding between the entire certificate and the
   delegated credential, cannot.
-* Each delegated credential is bound to a specific signature algorithm that may
-  be used to sign the TLS handshake ({{RFC8446}} section 4.2.3).  This prevents
+* Each delegated credential is bound to a specific signature algorithm for use
+  use in the TLS handshake ({{RFC8446}} section 4.2.3).  This prevents
   them from being used with other, perhaps unintended signature algorithms.
 
 
@@ -313,10 +321,10 @@ private key, so it is important that the Front-End and Back-End are parties
 with a trusted relationship.
 
 Use of short-lived certificates with automated certificate issuance,
-e.g., with Automated Certificate Managment Environment (ACME) {{?RFC8555}},
+e.g., with Automated Certificate Management Environment (ACME) {{?RFC8555}},
 reduces the risk of key compromise, but has several limitations.
 Specifically, it introduces an operationally-critical dependency on an
-external party.  It also
+external party (the CA).  It also
 limits the types of algorithms supported for TLS authentication to those
 the CA is willing to issue a certificate for.  Nonetheless, existing
 automated issuance APIs like ACME may be useful for provisioning delegated credentials.
@@ -342,7 +350,9 @@ has the following structure:
 valid_time:
 
 : Time in seconds relative to the beginning of the delegation certificate's
-  notBefore value after which the delegated credential is no longer valid. This MUST NOT exceed 7 days.
+  notBefore value after which the delegated credential is no longer valid.
+  Endpoints will reject delegate credentials with valid_times exceeding 7 days (as described
+  in {{client-and-server-behavior}}).
 
 expected_cert_verify_algorithm:
 
@@ -422,7 +432,7 @@ This document defines the following TLS extension code point.
 
 A client which supports this specification SHALL send a
 "delegated_credential" extension in its ClientHello. The body of the extension
-consists of a SignatureSchemeList:
+consists of a SignatureSchemeList (defined in {{RFC8446}}):
 
 ~~~~~~~~~~
    struct {
@@ -481,19 +491,20 @@ On receiving a delegated credential and a certificate chain, the peer
 validates the certificate chain and matches the end-entity certificate to the
 peer's expected identity.  It also takes the following steps:
 
+1. Validate that DelegatedCredential.cred.valid_time is no more than 7 days.
 1. Verify that the current time is within the validity interval of the credential.
    This is done by asserting that the current time is no more than the
    delegation certificate's notBefore value plus DelegatedCredential.cred.valid_time.
-2. Verify that the credential's remaining validity time is no more than the maximum validity
+1. Verify that the delegated credential's remaining validity time is no more than the maximum validity
    period. This is done by asserting that the current time is no more than the delegation
    certificate's notBefore value plus DelegatedCredential.cred.valid_time plus
    the maximum validity period.
-3. Verify that expected_cert_verify_algorithm matches
+1. Verify that expected_cert_verify_algorithm matches
    the scheme indicated in the peer's CertificateVerify message and that the
    algorithm is allowed for use with delegated credentials.
-4. Verify that the end-entity certificate satisfies the conditions in
+1. Verify that the end-entity certificate satisfies the conditions in
    {{certificate-requirements}}.
-5. Use the public key in the peer's end-entity certificate to verify the
+1. Use the public key in the peer's end-entity certificate to verify the
    signature of the credential using the algorithm indicated by
    DelegatedCredential.algorithm.
 
@@ -560,9 +571,9 @@ it may appear in the ClientHello (CH), CertificateRequest (CR),
 or Certificate (CT) messages in TLS 1.3 {{RFC8446}}.
 
 This document also defines an ASN.1 module for the DelegationUsage
-certificate extension in {{module}}.  IANA is requested to register an
-Object Identfier (OID) for the ASN.1 in "SMI Security for PKIX Module
-Identifier" arc.  An OID for the DelegationUsage certificate extension
+certificate extension in {{module}}.  IANA has registered value 95 for
+"id-mod-delegated-credential-extn" in the "SMI Security for PKIX Module
+Identifier" (1.3.5.1.5.5.7.0) registry.  An OID for the DelegationUsage certificate extension
 is not needed as it is already assigned to the extension from
 Cloudflare's IANA Private Enterprise Number (PEN) arc.
 
@@ -694,4 +705,45 @@ id-ce-delegationUsage OBJECT IDENTIFIER ::= { id-cloudflare 44 }
 DelegationUsage ::= NULL
 
 END
+
+~~~
+
+# Example Certificate
+
+The following certificate has the Delegated Credentials OID.
+
+~~~
+
+-----BEGIN CERTIFICATE-----
+MIIFRjCCBMugAwIBAgIQDGevB+lY0o/OecHFSJ6YnTAKBggqhkjOPQQDAzBMMQsw
+CQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMSYwJAYDVQQDEx1EaWdp
+Q2VydCBFQ0MgU2VjdXJlIFNlcnZlciBDQTAeFw0xOTAzMjYwMDAwMDBaFw0yMTAz
+MzAxMjAwMDBaMGoxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYw
+FAYDVQQHEw1TYW4gRnJhbmNpc2NvMRkwFwYDVQQKExBDbG91ZGZsYXJlLCBJbmMu
+MRMwEQYDVQQDEwprYzJrZG0uY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE
+d4azI83Bw0fcPgfoeiZpZZnwGuxjBjv++wzE0zAj8vNiUkKxOWSQiGNLn+xlWUpL
+lw9djRN1rLmVmn2gb9GgdKOCA28wggNrMB8GA1UdIwQYMBaAFKOd5h/52jlPwG7o
+kcuVpdox4gqfMB0GA1UdDgQWBBSfcb7fS3fUFAyB91fRcwoDPtgtJjAjBgNVHREE
+HDAaggprYzJrZG0uY29tggwqLmtjMmtkbS5jb20wDgYDVR0PAQH/BAQDAgeAMB0G
+A1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAjBpBgNVHR8EYjBgMC6gLKAqhiho
+dHRwOi8vY3JsMy5kaWdpY2VydC5jb20vc3NjYS1lY2MtZzEuY3JsMC6gLKAqhiho
+dHRwOi8vY3JsNC5kaWdpY2VydC5jb20vc3NjYS1lY2MtZzEuY3JsMEwGA1UdIARF
+MEMwNwYJYIZIAYb9bAEBMCowKAYIKwYBBQUHAgEWHGh0dHBzOi8vd3d3LmRpZ2lj
+ZXJ0LmNvbS9DUFMwCAYGZ4EMAQICMHsGCCsGAQUFBwEBBG8wbTAkBggrBgEFBQcw
+AYYYaHR0cDovL29jc3AuZGlnaWNlcnQuY29tMEUGCCsGAQUFBzAChjlodHRwOi8v
+Y2FjZXJ0cy5kaWdpY2VydC5jb20vRGlnaUNlcnRFQ0NTZWN1cmVTZXJ2ZXJDQS5j
+cnQwDAYDVR0TAQH/BAIwADAPBgkrBgEEAYLaSywEAgUAMIIBfgYKKwYBBAHWeQIE
+AgSCAW4EggFqAWgAdgC72d+8H4pxtZOUI5eqkntHOFeVCqtS6BqQlmQ2jh7RhQAA
+AWm5hYJ5AAAEAwBHMEUCICiGfq+hSThRL2m8H0awoDR8OpnEHNkF0nI6nL5yYL/j
+AiEAxwebGs/T6Es0YarPzoQJrVZqk+sHH/t+jrSrKd5TDjcAdgCHdb/nWXz4jEOZ
+X73zbv9WjUdWNv9KtWDBtOr/XqCDDwAAAWm5hYNgAAAEAwBHMEUCIQD9OWA8KGL6
+bxDKfgIleHJWB0iWieRs88VgJyfAg/aFDgIgQ/OsdSF9XOy1foqge0DTDM2FExuw
+0JR0AGZWXoNtJzMAdgBElGUusO7Or8RAB9io/ijA2uaCvtjLMbU/0zOWtbaBqAAA
+AWm5hYHgAAAEAwBHMEUCIQC4vua1n3BqthEqpA/VBTcsNwMtAwpCuac2IhJ9wx6X
+/AIgb+o00k28JQo9TMpP4vzJ3BD3HXWSNc2Zizbq7mkUQYMwCgYIKoZIzj0EAwMD
+aQAwZgIxAJsX7d0SuA8ddf/m7IWfNfs3MQfJyGkEezMJX1t6sRso5z50SS12LpXe
+muGa1FE2ZgIxAL+CDUF5pz7mhrAEIjQ1MqlpF9tH40dJGvYZZQ3W23cMzSkDfvlt
+y5S4RfWHIIPjbw==
+-----END CERTIFICATE-----
+
 ~~~
