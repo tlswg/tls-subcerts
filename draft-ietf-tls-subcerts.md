@@ -133,7 +133,9 @@ an outage at a CA will negatively affect the uptime of the service.
 To reduce the dependency on external CAs, this document proposes a limited delegation
 mechanism that allows a TLS peer to issue its own credentials within
 the scope of a certificate issued by an external CA.  These credentials only enable the
-recipient of the delegation to speak for names that the CA has authorized.
+recipient of the delegation to speak for names that the CA has authorized.  Furthermore,
+this mechanism allows the server to use modern signature algorithms such as
+ed25519 even if their CA does not support them.
 
 We will refer to the certificate issued by the CA as a "certificate",
 or "delegation certificate", and the one issued by the operator as a "delegated
@@ -266,8 +268,8 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
   the same public key, with different X.509 parameters.  Delegated credentials,
   which rely on a cryptographic binding between the entire certificate and the
   delegated credential, cannot.
-* Each delegated credential is bound to a specific signature algorithm that may
-  be used to sign the TLS handshake ({{RFC8446}} section 4.2.3).  This prevents
+* Each delegated credential is bound to a specific signature algorithm for use
+  use in the TLS handshake ({{RFC8446}} section 4.2.3).  This prevents
   them from being used with other, perhaps unintended signature algorithms.
 
 
@@ -313,10 +315,10 @@ private key, so it is important that the Front-End and Back-End are parties
 with a trusted relationship.
 
 Use of short-lived certificates with automated certificate issuance,
-e.g., with Automated Certificate Managment Environment (ACME) {{?RFC8555}},
+e.g., with Automated Certificate Management Environment (ACME) {{?RFC8555}},
 reduces the risk of key compromise, but has several limitations.
 Specifically, it introduces an operationally-critical dependency on an
-external party.  It also
+external party (the CA).  It also
 limits the types of algorithms supported for TLS authentication to those
 the CA is willing to issue a certificate for.  Nonetheless, existing
 automated issuance APIs like ACME may be useful for provisioning delegated credentials.
@@ -342,7 +344,9 @@ has the following structure:
 valid_time:
 
 : Time in seconds relative to the beginning of the delegation certificate's
-  notBefore value after which the delegated credential is no longer valid. This MUST NOT exceed 7 days.
+  notBefore value after which the delegated credential is no longer valid.
+  Credentials with valid_times exceeding 7 days will be rejected (as described
+  in {{client-and-server-behavior}}).
 
 expected_cert_verify_algorithm:
 
@@ -422,7 +426,7 @@ This document defines the following TLS extension code point.
 
 A client which supports this specification SHALL send a
 "delegated_credential" extension in its ClientHello. The body of the extension
-consists of a SignatureSchemeList:
+consists of a SignatureSchemeList (defined in {{RFC8446}}):
 
 ~~~~~~~~~~
    struct {
@@ -484,7 +488,7 @@ peer's expected identity.  It also takes the following steps:
 1. Verify that the current time is within the validity interval of the credential.
    This is done by asserting that the current time is no more than the
    delegation certificate's notBefore value plus DelegatedCredential.cred.valid_time.
-2. Verify that the credential's remaining validity time is no more than the maximum validity
+2. Verify that the delegated credential's remaining validity time is no more than the maximum validity
    period. This is done by asserting that the current time is no more than the delegation
    certificate's notBefore value plus DelegatedCredential.cred.valid_time plus
    the maximum validity period.
@@ -496,6 +500,7 @@ peer's expected identity.  It also takes the following steps:
 5. Use the public key in the peer's end-entity certificate to verify the
    signature of the credential using the algorithm indicated by
    DelegatedCredential.algorithm.
+6. Validate that DelegatedCredential.cred.valid_time is no more than 7 days.
 
 If one or more of these checks fail, then the delegated credential is deemed
 invalid.  Clients and servers that receive invalid delegated credentials MUST terminate the
@@ -560,9 +565,9 @@ it may appear in the ClientHello (CH), CertificateRequest (CR),
 or Certificate (CT) messages in TLS 1.3 {{RFC8446}}.
 
 This document also defines an ASN.1 module for the DelegationUsage
-certificate extension in {{module}}.  IANA is requested to register an
-Object Identfier (OID) for the ASN.1 in "SMI Security for PKIX Module
-Identifier" arc.  An OID for the DelegationUsage certificate extension
+certificate extension in {{module}}.  IANA has registered value 95 for
+"id-mod-delegated-credential-extn" in the "SMI Security for PKIX Module
+Identifier" (1.3.5.1.5.5.7.0) registry.  An OID for the DelegationUsage certificate extension
 is not needed as it is already assigned to the extension from
 Cloudflare's IANA Private Enterprise Number (PEN) arc.
 
