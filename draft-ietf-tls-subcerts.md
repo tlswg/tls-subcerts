@@ -135,7 +135,7 @@ mechanism that allows a TLS peer to issue its own credentials within
 the scope of a certificate issued by an external CA.  These credentials only enable the
 recipient of the delegation to speak for names that the CA has authorized.  Furthermore,
 this mechanism allows the server to use modern signature algorithms such as
-ed25519 even if their CA does not support them.
+Ed25519 {{?RFC8032}} even if their CA does not support them.
 
 We will refer to the certificate issued by the CA as a "certificate",
 or "delegation certificate", and the one issued by the operator as a "delegated
@@ -345,7 +345,7 @@ valid_time:
 
 : Time in seconds relative to the beginning of the delegation certificate's
   notBefore value after which the delegated credential is no longer valid.
-  Credentials with valid_times exceeding 7 days will be rejected (as described
+  Endpoints will reject delegate credentials with valid_times exceeding 7 days (as described
   in {{client-and-server-behavior}}).
 
 expected_cert_verify_algorithm:
