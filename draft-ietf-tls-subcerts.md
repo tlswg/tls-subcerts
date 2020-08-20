@@ -485,22 +485,22 @@ On receiving a delegated credential and a certificate chain, the peer
 validates the certificate chain and matches the end-entity certificate to the
 peer's expected identity.  It also takes the following steps:
 
+1. Validate that DelegatedCredential.cred.valid_time is no more than 7 days.
 1. Verify that the current time is within the validity interval of the credential.
    This is done by asserting that the current time is no more than the
    delegation certificate's notBefore value plus DelegatedCredential.cred.valid_time.
-2. Verify that the delegated credential's remaining validity time is no more than the maximum validity
+1. Verify that the delegated credential's remaining validity time is no more than the maximum validity
    period. This is done by asserting that the current time is no more than the delegation
    certificate's notBefore value plus DelegatedCredential.cred.valid_time plus
    the maximum validity period.
-3. Verify that expected_cert_verify_algorithm matches
+1. Verify that expected_cert_verify_algorithm matches
    the scheme indicated in the peer's CertificateVerify message and that the
    algorithm is allowed for use with delegated credentials.
-4. Verify that the end-entity certificate satisfies the conditions in
+1. Verify that the end-entity certificate satisfies the conditions in
    {{certificate-requirements}}.
-5. Use the public key in the peer's end-entity certificate to verify the
+1. Use the public key in the peer's end-entity certificate to verify the
    signature of the credential using the algorithm indicated by
    DelegatedCredential.algorithm.
-6. Validate that DelegatedCredential.cred.valid_time is no more than 7 days.
 
 If one or more of these checks fail, then the delegated credential is deemed
 invalid.  Clients and servers that receive invalid delegated credentials MUST terminate the
