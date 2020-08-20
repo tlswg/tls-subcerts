@@ -700,9 +700,13 @@ DelegationUsage ::= NULL
 
 END
 
+~~~
+
 # Example Certificate
 
 The following certificate has the Delegated Credentials OID.
+
+~~~
 
 -----BEGIN CERTIFICATE-----
 MIIFRjCCBMugAwIBAgIQDGevB+lY0o/OecHFSJ6YnTAKBggqhkjOPQQDAzBMMQsw
