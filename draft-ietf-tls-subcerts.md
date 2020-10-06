@@ -524,12 +524,12 @@ is the ASN.1 {{X.680}} for the DelegationUsage certificate extension.
 
 ~~~~~~~~~~
     ext-delegationUsage EXTENSION  ::= {
-        SYNTAX DelegationUsage IDENTIFIED BY id-ce-delegationUsage
+        SYNTAX DelegationUsage IDENTIFIED BY id-pe-delegationUsage
     }
 
     DelegationUsage ::= NULL
 
-    id-ce-delegationUsage OBJECT IDENTIFIER ::=
+    id-pe-delegationUsage OBJECT IDENTIFIER ::=
         { iso(1) identified-organization(3) dod(6) internet(1)
           private(4) enterprise(1) id-cloudflare(44363) 44 }
 ~~~~~~~~~~
@@ -698,9 +698,9 @@ id-cloudflare OBJECT IDENTIFIER ::=
 
 ext-delegationUsage EXTENSION ::=
   { SYNTAX DelegationUsage
-    IDENTIFIED BY id-ce-delegationUsage }
+    IDENTIFIED BY id-pe-delegationUsage }
 
-id-ce-delegationUsage OBJECT IDENTIFIER ::= { id-cloudflare 44 }
+id-pe-delegationUsage OBJECT IDENTIFIER ::= { id-cloudflare 44 }
 
 DelegationUsage ::= NULL
 
