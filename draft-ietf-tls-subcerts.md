@@ -275,7 +275,7 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
   which rely on a cryptographic binding between the entire certificate and the
   delegated credential, cannot.
 * Each delegated credential is bound to a specific signature algorithm for use
-  use in the TLS handshake ({{RFC8446}} section 4.2.3).  This prevents
+  in the TLS handshake ({{RFC8446}} section 4.2.3).  This prevents
   them from being used with other, perhaps unintended signature algorithms.
 
 
