@@ -277,6 +277,9 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
 * Each delegated credential is bound to a specific signature algorithm for use
   in the TLS handshake ({{RFC8446}} section 4.2.3).  This prevents
   them from being used with other, perhaps unintended signature algorithms.
+  This prevents them from being used with other, perhaps unintended signature
+  algorithms. The signature algorithm bound to the delegated credential and
+  the one in the servers certificate can be different.
 
 
 ## Related Work
