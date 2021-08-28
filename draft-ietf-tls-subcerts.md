@@ -358,7 +358,7 @@ expected_cert_verify_algorithm:
 
 : The signature algorithm of the Credential key pair, where the type
   SignatureScheme is as defined in {{RFC8446}}. This is expected to be
-  the same as the sender's CertificateVerify.algorithm.  Only signature
+  the same as the sender's CertificateVerify.algorithm (as described in Section 4.1).  Only signature
   algorithms allowed for use in CertificateVerify messages are allowed.  When
   using RSA, the public key MUST NOT use the rsaEncryption OID.  As a result,
   the following algorithms are not allowed for use with delegated credentials:
