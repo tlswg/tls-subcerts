@@ -107,6 +107,18 @@ specification.
 
 # Introduction
 
+Server operators often deploy TLS termination services in locations such
+as remote data centers or Content Delivery Networks (CDNs) where it may
+be difficult to detect key compromises.  Short-lived certificates may be
+used to limit the exposure of keys in these cases.
+
+However, short-lived certificates need to be renewed more frequently than
+long-lived certificates.  If an external CA is unable to issue a certificate in
+time to replace a deployed certificate, the server would no longer be able to
+present a valid certificate to clients.  With short-lived certificates, there is
+a smaller window of time to renew a certificates and therefore a higher risk that
+an outage at a CA will negatively affect the uptime of the service.
+
 Typically, a TLS server uses a certificate provided by some entity other than
 the operator of the server (a "Certification Authority" or CA) {{!RFC8446}}
 {{!RFC5280}}.  This organizational separation makes the TLS server operator
@@ -116,19 +128,6 @@ dependent on the CA for some aspects of its operations, for example:
   interact with the CA.
 * The server operator can only use TLS signature schemes for which the CA
   will issue credentials.
-
-These dependencies cause problems in practice.  Server operators often deploy
-TLS termination services in locations such as remote data centers
-or Content Delivery Networks (CDNs) where it may be difficult to detect key
-compromises.  Short-lived certificates may be used to limit the exposure of keys
-in these cases.
-
-However, short-lived certificates need to be renewed more frequently than
-long-lived certificates.  If an external CA is unable to issue a certificate in
-time to replace a deployed certificate, the server would no longer be able to
-present a valid certificate to clients.  With short-lived certificates, there is
-a smaller window of time to renew a certificates and therefore a higher risk that
-an outage at a CA will negatively affect the uptime of the service.
 
 To reduce the dependency on external CAs, this document proposes a limited delegation
 mechanism that allows a TLS peer to issue its own credentials within
