@@ -448,8 +448,8 @@ extension is not present, the server MUST NOT send a delegated credential.
 The server MUST ignore the extension unless TLS 1.3 or a later version is
 negotiated.  An example of when a server could choose not to send a delegated
 credential is when the SignatureSchemes listed only contain signature schemes
-for which a corresponding delegated credential does not exist, or if the
-SignatureSchemes advertised are not considered secure enough for the connection.
+for which a corresponding delegated credential does not exist or are
+otherwise unsuitable for the connection.
 
 The server MUST send the delegated credential as an extension in the
 CertificateEntry of its end-entity certificate; the client SHOULD ignore
