@@ -625,8 +625,8 @@ probes that a server can perform.
 
 ## The Impact of Signature Forgery Attacks
 
-Delegated credentials are only used in TLS 1.3 connections, but the certificate
-used sign a delegated credential may be used in other contexts such as TLS 1.2.
+Delegated credentials are only used in TLS 1.3 connections. However, the certificate
+that signs a delegated credential may be used in other contexts such as TLS 1.2.
 Using a certificate in multiple contexts opens up a potential cross-protocol
 attack against delegated credentials in TLS 1.3.
 
