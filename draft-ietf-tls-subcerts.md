@@ -489,9 +489,8 @@ delegated credentials MUST terminate the connection with an
 
 On receiving a delegated credential and a certificate chain, the peer validates
 the certificate chain and matches the end-entity certificate to the peer's
-expected identity. Define expiry time as the delegation certificate's
-notBefore value plus DelegatedCredential.cred.valid_time. Then perform the
-following checks:
+expected identity. It then performs the following checks with expiry time set to the 
+delegation certificate's notBefore value plus DelegatedCredential.cred.valid_time:
 
 1. Verify that the current time is within the validity interval of the
    credential. This is done by asserting that the current time does not exceed
