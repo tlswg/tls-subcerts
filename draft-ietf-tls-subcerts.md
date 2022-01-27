@@ -109,7 +109,8 @@ specification.
 
 Server operators often deploy TLS termination services in locations such
 as remote data centers or Content Delivery Networks (CDNs) where it may
-be difficult to detect key compromises.  Short-lived certificates may be
+be difficult to detect compromises of private key material corresponding
+to TLS certificates.  Short-lived certificates may be
 used to limit the exposure of keys in these cases.
 
 However, short-lived certificates need to be renewed more frequently than
@@ -117,7 +118,7 @@ long-lived certificates.  If an external CA is unable to issue a certificate in
 time to replace a deployed certificate, the server would no longer be able to
 present a valid certificate to clients.  With short-lived certificates, there is
 a smaller window of time to renew a certificates and therefore a higher risk that
-an outage at a CA will negatively affect the uptime of the service.
+an outage at a CA will negatively affect the uptime of the TLS-fronted service.
 
 Typically, a TLS server uses a certificate provided by some entity other than
 the operator of the server (a "Certification Authority" or CA) {{!RFC8446}}
@@ -126,8 +127,9 @@ dependent on the CA for some aspects of its operations, for example:
 
 * Whenever the server operator wants to deploy a new certificate, it has to
   interact with the CA.
-* The server operator can only use TLS signature schemes for which the CA
-  will issue credentials.
+* The CA might only issue credentials containing certain types of public key,
+  which can limit the set of TLS signature schemes usable by the server
+  operator.
 
 To reduce the dependency on external CAs, this document proposes a limited delegation
 mechanism that allows a TLS peer to issue its own credentials within
@@ -156,6 +158,7 @@ RFC EDITOR PLEASE DELETE THIS SECTION.
 (\*) indicates changes to the wire protocol.
 
 draft-10
+
    * Address superficial comments
    * Add example certificate
 
@@ -228,11 +231,11 @@ in a few important ways:
   that indicates support for this mechanism.
 * The peer sending the Certificate message provides both the certificate
   chain terminating in its certificate as well as the delegated credential.
-* The authenticating initiator uses information from the peer's certificate
+* The initiator uses information from the peer's certificate
   to verify the delegated credential and that the peer is asserting an
-  expected identity.
+  expected identity, determining an authentication result for the peer..
 * Peers accepting the delegated credential use it as the certificate
-  key for the TLS handshake
+  key for the TLS handshake.
 
 As detailed in {{delegated-credentials}}, the delegated credential is
 cryptographically bound to the end-entity certificate with which the
@@ -275,9 +278,9 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
   delegated credential, cannot.
 * Each delegated credential is bound to a specific signature algorithm for use
   in the TLS handshake ({{RFC8446}} section 4.2.3).  This prevents
-  them from being used with other, perhaps unintended signature algorithms.
+  them from being used with other, perhaps unintended, signature algorithms.
   The signature algorithm bound to the delegated credential can be chosen
-  independantly of the set of signature algorithms supported by the end-entity
+  independently of the set of signature algorithms supported by the end-entity
   certificate.
 
 
@@ -285,7 +288,8 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
 
 Many of the use cases for delegated credentials can also be addressed using
 purely server-side mechanisms that do not require changes to client behavior
-(e.g., a PKCS#11 interface or a remote signing mechanism [KEYLESS]).  These
+(e.g., a PKCS#11 interface or a remote signing mechanism, [KEYLESS] being one
+example).  These
 mechanisms, however, incur per-transaction latency, since the front-end
 server has to interact with a back-end server that holds a private key.  The
 mechanism proposed in this document allows the delegation to be done
@@ -317,10 +321,11 @@ Client            Front-End            Back-End
 ~~~~~~~~~~
 
 These two mechanisms can be complementary.  A server could use delegated credentials
-for clients that support them, while using [KEYLESS] to support legacy clients.
-The private key for a delegated credential can be used in place of a certificate
-private key, so it is important that the Front-End and Back-End are parties
-with a trusted relationship.
+for clients that support them, while using a server-side mechanism to support legacy clients.
+Both mechanisms require a trusted relationship between the Front-End and
+Back-End -- the delegated credential can be used in place of a certificate
+private key, and the remote key signing case is effectively a signing oracle
+for TLS connections using that certificate.
 
 Use of short-lived certificates with automated certificate issuance,
 e.g., with Automated Certificate Management Environment (ACME) {{?RFC8555}},
@@ -337,9 +342,10 @@ automated issuance APIs like ACME may be useful for provisioning delegated crede
 While X.509 forbids end-entity certificates from being used as issuers for
 other certificates, it is valid to use them to issue other signed
 objects as long as the certificate contains the digitalSignature KeyUsage
-({{RFC5280}} section 4.2.1.3).  We define a new signed object format that would
-encode only the semantics that are needed for this application.  The Credential
-has the following structure:
+({{RFC5280}} section 4.2.1.3).  (All certificates compatible with TLS 1.3 are
+required to contain the digitalSignature KeyUsage.)  We define a new signed
+object format that would encode only the semantics that are needed for this
+application.  The Credential has the following structure:
 
 ~~~~~~~~~~
    struct {
@@ -351,8 +357,8 @@ has the following structure:
 
 valid_time:
 
-: Time in seconds relative to the beginning of the delegation certificate's
-  notBefore value after which the delegated credential is no longer valid.
+: Time, in seconds relative to the delegation certificate's
+  notBefore value, after which the delegated credential is no longer valid.
   Endpoints will reject delegated credentials that expire more than 7 days
   from the current time (as described in {{client-and-server-behavior}}).
 
@@ -415,8 +421,8 @@ delegator.
 
 The code changes required in order to create and verify delegated credentials,
 and the implementation complexity this entails, are localized to the TLS
-stack.  This has the advantage of avoiding changes to security-critical and
-often delicate PKI code.
+stack.  This has the advantage of avoiding changes to the often-delicate
+security-critical PKI code.
 
 ## Client and Server Behavior
 
@@ -442,8 +448,9 @@ consists of a SignatureSchemeList (defined in {{RFC8446}}):
    } SignatureSchemeList;
 ~~~~~~~~~~
 
-If the client receives a delegated credential without indicating support,
-then the client MUST abort with an "unexpected_message" alert.
+If the client receives a delegated credential without having indicated support
+in its ClientHello,
+then the client MUST abort the handshake with an "unexpected_message" alert.
 
 If the extension is present, the server MAY send a delegated credential; if the
 extension is not present, the server MUST NOT send a delegated credential.
@@ -457,7 +464,9 @@ The server MUST send the delegated credential as an extension in the
 CertificateEntry of its end-entity certificate; the client SHOULD ignore
 delegated credentials sent as extensions to any other certificate.
 
-The expected_cert_verify_algorithm field MUST be of a
+The algorithm field MUST be of a type advertised by the client in the
+"signature_algorithms" extension of the ClientHello message and
+the expected_cert_verify_algorithm field MUST be of a
 type advertised by the client in the SignatureSchemeList and is
 considered invalid otherwise.  Clients that receive invalid delegated
 credentials MUST terminate the connection with an "illegal_parameter"
@@ -469,7 +478,7 @@ A server that supports this specification SHALL send a
 "delegated_credential" extension in the CertificateRequest message
 when requesting client authentication.  The body of the
 extension consists of a SignatureSchemeList.  If the server receives a
-delegated credential without indicating support in its
+delegated credential without having indicated support in its
 CertificateRequest, then the server MUST abort with an
 "unexpected_message" alert.
 
@@ -486,23 +495,26 @@ The algorithm field MUST be of a type advertised by the server
 in the "signature_algorithms" extension of the CertificateRequest message
 and the expected_cert_verify_algorithm field MUST be of a type
 advertised by the server in the SignatureSchemeList
-and considered invalid otherwise.  Servers that receive invalid
+and is considered invalid otherwise.  Servers that receive invalid
 delegated credentials MUST terminate the connection with an
 "illegal_parameter" alert.
 
 ### Validating a Delegated Credential
 
-On receiving a delegated credential and a certificate chain, the peer validates
+On receiving a delegated credential and certificate chain, the peer validates
 the certificate chain and matches the end-entity certificate to the peer's
-expected identity. It then performs the following checks with expiry time set to the 
+expected identity in the same way that is done when delegated credentials are
+not in use. It then performs the following checks with expiry time set to the 
 delegation certificate's notBefore value plus DelegatedCredential.cred.valid_time:
 
 1. Verify that the current time is within the validity interval of the
    credential. This is done by asserting that the current time does not exceed
-   the expiry time.
+   the expiry time.  (The start time of the credential is implicitly validated
+   as part of certificate validation.)
 1. Verify that the delegated credential's remaining validity period is no more
    than the maximum validity period. This is done by asserting that the expiry
-   time does not exceed the current time plus the maximum validity period (7 days).
+   time does not exceed the current time plus the maximum validity period (7
+   days by default).
 1. Verify that expected_cert_verify_algorithm matches
    the scheme indicated in the peer's CertificateVerify message and that the
    algorithm is allowed for use with delegated credentials.
@@ -590,7 +602,7 @@ its validity period.  An attacker who compromises the private key of a delegated
 credential can act as a man-in-the-middle until the delegated credential expires.
 However, they cannot create new delegated credentials.  Thus, delegated
 credentials should not be used to send a delegation to an untrusted party, but
-is meant to be used between parties that have some trust relationship with each
+are meant to be used between parties that have some trust relationship with each
 other.  The secrecy of the delegated credential's private key is thus important and
 access control mechanisms SHOULD be used to protect it, including file system
 controls, physical security, or hardware security modules.
@@ -682,7 +694,7 @@ from {{?RFC5912}}.
 DelegatedCredentialExtn
   { iso(1) identified-organization(3) dod(6) internet(1)
     security(5) mechanisms(5) pkix(7) id-mod(0)
-    id-mod-delegated-credential-extn(TBD) }
+    id-mod-delegated-credential-extn(95) }
 
 DEFINITIONS IMPLICIT TAGS ::=
 BEGIN
