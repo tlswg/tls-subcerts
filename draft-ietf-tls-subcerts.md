@@ -270,7 +270,7 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
   certificate.  For this reason, delegated credentials have very restricted
   semantics that should not conflict with X.509 semantics.
 * Proxy certificates rely on the certificate path building process to establish
-  a binding between the proxy certificate and the server certificate.  Since
+  a binding between the proxy certificate and the end-entity certificate.  Since
   the certificate path building process is not cryptographically protected, it is
   possible that a proxy certificate could be bound to another certificate with
   the same public key, with different X.509 parameters.  Delegated credentials,
@@ -551,7 +551,7 @@ is the ASN.1 {{X.680}} for the DelegationUsage certificate extension.
 ~~~~~~~~~~
 
 The extension MUST be marked non-critical.  (See Section 4.2 of {{RFC5280}}.)
-The client MUST NOT accept a delegated credential unless the server's end-entity
+An endpoint MUST NOT accept a delegated credential unless the peer's end-entity
 certificate satisfies the following criteria:
 
 * It has the DelegationUsage extension.
