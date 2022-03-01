@@ -398,7 +398,7 @@ signature:
 The signature of the DelegatedCredential is computed over the concatenation of:
 
 1. A string that consists of octet 32 (0x20) repeated 64 times.
-2. The context string "(D)TLS, server delegated credentials" for server authentication and "(D)TLS, client delegated credentials" for client authentication.
+2. The context string "TLS, server delegated credentials" for server authentication and "TLS, client delegated credentials" for client authentication.
 3. A single 0 byte, which serves as the separator.
 4. The DER-encoded X.509 end-entity certificate used to sign the
    DelegatedCredential.
