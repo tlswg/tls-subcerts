@@ -1,5 +1,5 @@
----
-title: Delegated Credentials for TLS
+
+title: Delegated Credentials for (D)TLS
 abbrev:
 docname: draft-ietf-tls-subcerts-latest
 category: std
@@ -94,11 +94,11 @@ informative:
 
 --- abstract
 
-The organizational separation between the operator of a TLS endpoint and the
+The organizational separation between the operator of a (D)TLS endpoint and the
 certification authority can create limitations.  For example, the lifetime of
 certificates, how they may be used, and the algorithms they support are
 ultimately determined by the certification authority.  This document describes a
-mechanism by which operators may delegate their own credentials for use in TLS,
+mechanism by which operators may delegate their own credentials for use in (D)TLS,
 without breaking compatibility with peers that do not support this
 specification.
 
@@ -107,7 +107,7 @@ specification.
 
 # Introduction
 
-Server operators often deploy TLS termination services in locations such
+Server operators often deploy (D)TLS termination services in locations such
 as remote data centers or Content Delivery Networks (CDNs) where it may
 be difficult to detect compromises of private key material corresponding
 to TLS certificates.  Short-lived certificates may be
@@ -120,19 +120,19 @@ present a valid certificate to clients.  With short-lived certificates, there is
 a smaller window of time to renew a certificates and therefore a higher risk that
 an outage at a CA will negatively affect the uptime of the TLS-fronted service.
 
-Typically, a TLS server uses a certificate provided by some entity other than
-the operator of the server (a "Certification Authority" or CA) {{!RFC8446}}
-{{!RFC5280}}.  This organizational separation makes the TLS server operator
+Typically, a (D)TLS server uses a certificate provided by some entity other than
+the operator of the server (a "Certification Authority" or CA) {{!RFC8446}} {{!ID.ietf-tls-dtls13}}
+{{!RFC5280}}.  This organizational separation makes the (D)TLS server operator
 dependent on the CA for some aspects of its operations, for example:
 
 * Whenever the server operator wants to deploy a new certificate, it has to
   interact with the CA.
 * The CA might only issue credentials containing certain types of public key,
-  which can limit the set of TLS signature schemes usable by the server
+  which can limit the set of (D)TLS signature schemes usable by the server
   operator.
 
 To reduce the dependency on external CAs, this document proposes a limited delegation
-mechanism that allows a TLS peer to issue its own credentials within
+mechanism that allows a (D)TLS peer to issue its own credentials within
 the scope of a certificate issued by an external CA.  These credentials only enable the
 recipient of the delegation to speak for names that the CA has authorized.  Furthermore,
 this mechanism allows the server to use modern signature algorithms such as
@@ -224,7 +224,7 @@ from the certificate that is issued to the peer.  The private key
 used to sign a credential corresponds to the public key of the peer's
 X.509 end-entity certificate {{RFC5280}}.
 
-A TLS handshake that uses delegated credentials differs from a standard handshake
+A (D)TLS handshake that uses delegated credentials differs from a standard handshake
 in a few important ways:
 
 * The initiating peer provides an extension in its ClientHello or CertificateRequest
@@ -235,21 +235,20 @@ in a few important ways:
   to verify the delegated credential and that the peer is asserting an
   expected identity, determining an authentication result for the peer..
 * Peers accepting the delegated credential use it as the certificate
-  key for the TLS handshake.
+  key for the (D)TLS handshake.
 
 As detailed in {{delegated-credentials}}, the delegated credential is
 cryptographically bound to the end-entity certificate with which the
 credential may be used.  This document specifies the use of delegated
-credentials in TLS 1.3 or later; their use in prior versions of the
+credentials in (D)TLS 1.3 or later; their use in prior versions of the
 protocol is not allowed.
 
-Delegated credentials allow a peer to terminate TLS connections on behalf of
+Delegated credentials allow a peer to terminate (D)TLS connections on behalf of
 the certificate owner.  If a credential is stolen, there is no mechanism for
 revoking it without revoking the certificate itself.  To limit exposure in case
 of the compromise of a delegated credential's private key, delegated credentials
 have a maximum validity period.  In the absence of an application profile standard
-specifying otherwise, the maximum validity period is set to 7 days.  Peers MUST
-NOT issue credentials with a validity period longer than the maximum validity period.
+specifying otherwise, the maximum validity period is set to 7 days.  Peers MUST NOT issue credentials with a validity period longer than the maximum validity period or that extends beyond the validity period of the delegation certificate.
 This mechanism is described in detail in {{client-and-server-behavior}}.
 
 It was noted in [XPROT] that certificates in use by servers that support
@@ -277,7 +276,7 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
   which rely on a cryptographic binding between the entire certificate and the
   delegated credential, cannot.
 * Each delegated credential is bound to a specific signature algorithm for use
-  in the TLS handshake ({{RFC8446}} section 4.2.3).  This prevents
+  in the (D)TLS handshake ({{RFC8446}} section 4.2.3).  This prevents
   them from being used with other, perhaps unintended, signature algorithms.
   The signature algorithm bound to the delegated credential can be chosen
   independently of the set of signature algorithms supported by the end-entity
@@ -295,7 +294,7 @@ server has to interact with a back-end server that holds a private key.  The
 mechanism proposed in this document allows the delegation to be done
 off-line, with no per-transaction latency.  The figure below compares the
 message flows for these two mechanisms
-with TLS 1.3 {{RFC8446}}.
+with (D)TLS 1.3 {{RFC8446}} {{ID.ietf-tls-dtls13}}.
 
 ~~~~~~~~~~
 Remote key signing:
@@ -332,7 +331,7 @@ e.g., with Automated Certificate Management Environment (ACME) {{?RFC8555}},
 reduces the risk of key compromise, but has several limitations.
 Specifically, it introduces an operationally-critical dependency on an
 external party (the CA).  It also
-limits the types of algorithms supported for TLS authentication to those
+limits the types of algorithms supported for (D)TLS authentication to those
 the CA is willing to issue a certificate for.  Nonetheless, existing
 automated issuance APIs like ACME may be useful for provisioning delegated credentials.
 
@@ -420,13 +419,13 @@ only used with the certificate and signature algorithm chosen by the
 delegator.
 
 The code changes required in order to create and verify delegated credentials,
-and the implementation complexity this entails, are localized to the TLS
+and the implementation complexity this entails, are localized to the (D)TLS
 stack.  This has the advantage of avoiding changes to the often-delicate
 security-critical PKI code.
 
 ## Client and Server Behavior
 
-This document defines the following TLS extension code point.
+This document defines the following (D)TLS extension code point.
 
 ~~~~~~~~~~
    enum {
@@ -454,7 +453,7 @@ then the client MUST abort the handshake with an "unexpected_message" alert.
 
 If the extension is present, the server MAY send a delegated credential; if the
 extension is not present, the server MUST NOT send a delegated credential.
-The server MUST ignore the extension unless TLS 1.3 or a later version is
+The server MUST ignore the extension unless (D)TLS 1.3 or a later version is
 negotiated.  An example of when a server could choose not to send a delegated
 credential is when the SignatureSchemes listed only contain signature schemes
 for which a corresponding delegated credential does not exist or are
@@ -484,7 +483,7 @@ CertificateRequest, then the server MUST abort with an
 
 If the extension is present, the client MAY send a delegated credential; if the
 extension is not present, the client MUST NOT send a delegated credential.
-The client MUST ignore the extension unless TLS 1.3 or a later version is
+The client MUST ignore the extension unless (D)TLS 1.3 or a later version is
 negotiated.
 
 The client MUST send the delegated credential as an extension in the
@@ -559,7 +558,7 @@ certificate satisfies the following criteria:
   {{RFC5280}}).
 
 A new extension was chosen instead of adding a new Extended Key Usage
-(EKU) to be compatible with deployed TLS and PKI software stacks
+(EKU) to be compatible with deployed (D)TLS and PKI software stacks
 without requiring CAs to issue new intermediate certificates.
 
 
@@ -584,7 +583,8 @@ This document registers the "delegated_credentials" extension in the
 extension has been assigned a code point of 34.  The IANA registry
 lists this extension as "Recommended" (i.e., "Y") and indicates that
 it may appear in the ClientHello (CH), CertificateRequest (CR),
-or Certificate (CT) messages in TLS 1.3 {{RFC8446}}.
+or Certificate (CT) messages in (D)TLS 1.3 {{RFC8446}} {{ID.ietf-tls-dtls13}}.
+Additionally, the "DTLS-Only" column is assigned the value "N".
 
 This document also defines an ASN.1 module for the DelegationUsage
 certificate extension in {{module}}.  IANA has registered value 95 for
@@ -597,7 +597,7 @@ Cloudflare's IANA Private Enterprise Number (PEN) arc.
 
 ## Security of Delegated Credential's Private Key
 
-Delegated credentials limit the exposure of the private key used in a TLS connection by limiting
+Delegated credentials limit the exposure of the private key used in a (D)TLS connection by limiting
 its validity period.  An attacker who compromises the private key of a delegated
 credential can act as a man-in-the-middle until the delegated credential expires.
 However, they cannot create new delegated credentials.  Thus, delegated
@@ -641,18 +641,18 @@ probes that a server can perform.
 
 ## The Impact of Signature Forgery Attacks
 
-Delegated credentials are only used in TLS 1.3 connections. However, the certificate
-that signs a delegated credential may be used in other contexts such as TLS 1.2.
+Delegated credentials are only used in (D)TLS 1.3 connections. However, the certificate
+that signs a delegated credential may be used in other contexts such as (D)TLS 1.2.
 Using a certificate in multiple contexts opens up a potential cross-protocol
-attack against delegated credentials in TLS 1.3.
+attack against delegated credentials in (D)TLS 1.3.
 
-When TLS 1.2 servers support RSA key exchange, they may be vulnerable to attacks
+When (D)TLS 1.2 servers support RSA key exchange, they may be vulnerable to attacks
 that allow forging an RSA signature over an arbitrary message [BLEI].
 TLS 1.2 {{?RFC5246}} (Section 7.4.7.1.) describes a mitigation strategy requiring
 careful implementation of timing resistant countermeasures for preventing these attacks.
 Experience shows that in practice, server implementations may fail to fully
 stop these attacks due to the complexity of this mitigation [ROBOT].
-For TLS 1.2 servers that support RSA key exchange using a DC-enabled end-entity
+For (D)TLS 1.2 servers that support RSA key exchange using a DC-enabled end-entity
 certificate, a hypothetical signature forgery attack would allow forging a
 signature over a delegated credential.
 The forged delegated credential could then be used by the attacker as the equivalent of a
@@ -661,7 +661,7 @@ man-in-the-middle certificate, valid for a maximum of 7 days.
 Server operators should therefore minimize the risk of using DC-enabled
 end-entity certificates where a signature forgery oracle may be present.
 If possible, server operators may choose to use DC-enabled certificates only for signing
-credentials, and not for serving non-DC TLS traffic.
+credentials, and not for serving non-DC (D)TLS traffic.
 Furthermore, server operators may use elliptic curve certificates for DC-enabled
 traffic, while using RSA certificates without the DelegationUsage certificate
 extension for non-DC traffic; this completely prevents such attacks.
