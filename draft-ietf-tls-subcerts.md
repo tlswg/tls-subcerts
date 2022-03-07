@@ -1,4 +1,4 @@
-
+---
 title: Delegated Credentials for (D)TLS
 abbrev:
 docname: draft-ietf-tls-subcerts-latest
@@ -94,13 +94,14 @@ informative:
 
 --- abstract
 
-The organizational separation between the operator of a (D)TLS endpoint and the
-certification authority can create limitations.  For example, the lifetime of
-certificates, how they may be used, and the algorithms they support are
-ultimately determined by the certification authority.  This document describes a
-mechanism by which operators may delegate their own credentials for use in (D)TLS,
-without breaking compatibility with peers that do not support this
-specification.
+The organizational separation between the operator of a (D)TLS endpoint
+and the certification authority can create limitations.  For example,
+the lifetime of certificates, how they may be used, and the
+algorithms they support are ultimately determined by the
+certification authority.  This document describes a mechanism to
+to overcome some of these limitations by enabling operators to
+delegate their own credentials for use in (D)TLS without breaking
+compatibility with peers that do not support this specification.
 
 --- middle
 
@@ -121,7 +122,7 @@ a smaller window of time to renew a certificates and therefore a higher risk tha
 an outage at a CA will negatively affect the uptime of the TLS-fronted service.
 
 Typically, a (D)TLS server uses a certificate provided by some entity other than
-the operator of the server (a "Certification Authority" or CA) {{!RFC8446}} {{!ID.ietf-tls-dtls13}}
+the operator of the server (a "Certification Authority" or CA) {{!RFC8446}}
 {{!RFC5280}}.  This organizational separation makes the (D)TLS server operator
 dependent on the CA for some aspects of its operations, for example:
 
@@ -156,6 +157,12 @@ capitals, as shown here.
 RFC EDITOR PLEASE DELETE THIS SECTION.
 
 (\*) indicates changes to the wire protocol.
+
+draft-11
+
+   * Editorial changes based on AD comments
+   * Add support for DTLS
+   * Address address ambiguity in cert expiry
 
 draft-10
 
@@ -251,12 +258,14 @@ have a maximum validity period.  In the absence of an application profile standa
 specifying otherwise, the maximum validity period is set to 7 days.  Peers MUST NOT issue credentials with a validity period longer than the maximum validity period or that extends beyond the validity period of the delegation certificate.
 This mechanism is described in detail in {{client-and-server-behavior}}.
 
-It was noted in [XPROT] that certificates in use by servers that support
-outdated protocols such as SSLv2 can be used to forge signatures for
-certificates that contain the keyEncipherment KeyUsage ({{RFC5280}} section
-4.2.1.3).  In order to prevent this type of cross-protocol attack, we define a
-new DelegationUsage extension to X.509 that permits use of delegated
-credentials.  (See {{certificate-requirements}}.)
+It was noted in [XPROT] that certificates in use by servers that
+support outdated protocols such as SSLv2 can be used to forge
+signatures for certificates that contain the keyEncipherment KeyUsage
+({{RFC5280}} section 4.2.1.3).  In order to reduce the risk of cross-
+protocol attacks on certificates that are not intended to be used
+with DC-capable TLS stacks, we define a new DelegationUsage
+extension to X.509 that permits use of delegated credentials.  (See {{certificate-requirements}}.)
+
 
 ## Rationale
 
@@ -264,10 +273,13 @@ Delegated credentials present a better alternative than other delegation
 mechanisms like proxy certificates {{?RFC3820}} for several reasons:
 
 * There is no change needed to certificate validation at the PKI layer.
-* X.509 semantics are very rich.  This can cause unintended consequences if a
-  service owner creates a proxy certificate where the properties differ from the leaf
-  certificate.  For this reason, delegated credentials have very restricted
-  semantics that should not conflict with X.509 semantics.
+* X.509 semantics are very rich.  This can cause unintended
+  consequences if a service owner creates a proxy certificate where
+  the properties differ from the leaf certificate.  Proxy certificates can
+  be useful in controlled environments, but remain a risk in scenarios
+  where the additional flexibility they provide are not necessary.  For
+  this reason,  delegated credentials have very restricted semantics
+  that should not conflict with X.509 semantics.
 * Proxy certificates rely on the certificate path building process to establish
   a binding between the proxy certificate and the end-entity certificate.  Since
   the certificate path building process is not cryptographically protected, it is
@@ -294,7 +306,8 @@ server has to interact with a back-end server that holds a private key.  The
 mechanism proposed in this document allows the delegation to be done
 off-line, with no per-transaction latency.  The figure below compares the
 message flows for these two mechanisms
-with (D)TLS 1.3 {{RFC8446}} {{ID.ietf-tls-dtls13}}.
+with (D)TLS 1.3 {{RFC8446}} {{!I-D.ietf-tls-dtls13}}.
+
 
 ~~~~~~~~~~
 Remote key signing:
@@ -319,12 +332,12 @@ Client            Front-End            Back-End
   |        ...        |                    |
 ~~~~~~~~~~
 
-These two mechanisms can be complementary.  A server could use delegated credentials
-for clients that support them, while using a server-side mechanism to support legacy clients.
-Both mechanisms require a trusted relationship between the Front-End and
-Back-End -- the delegated credential can be used in place of a certificate
-private key, and the remote key signing case is effectively a signing oracle
-for TLS connections using that certificate.
+These two mechanisms can be complementary.  A server could use
+delegated credentials for clients that support them, while using a
+server-side mechanism to support legacy clients.  Both mechanisms
+require a trusted relationship between the Front-End and Back-End --
+the delegated credential can be used in place of a certificate
+private key.
 
 Use of short-lived certificates with automated certificate issuance,
 e.g., with Automated Certificate Management Environment (ACME) {{?RFC8555}},
@@ -578,12 +591,12 @@ its validity periods, which should also be taken into account.
 
 # IANA Considerations
 
-This document registers the "delegated_credentials" extension in the
-"TLS ExtensionType Values" registry.  The "delegated_credentials"
+This document registers the "delegated_credential" extension in the
+"TLS ExtensionType Values" registry.  The "delegated_credential"
 extension has been assigned a code point of 34.  The IANA registry
 lists this extension as "Recommended" (i.e., "Y") and indicates that
 it may appear in the ClientHello (CH), CertificateRequest (CR),
-or Certificate (CT) messages in (D)TLS 1.3 {{RFC8446}} {{ID.ietf-tls-dtls13}}.
+or Certificate (CT) messages in (D)TLS 1.3 {{RFC8446}} {{!I-D.ietf-tls-dtls13}}.
 Additionally, the "DTLS-Only" column is assigned the value "N".
 
 This document also defines an ASN.1 module for the DelegationUsage
@@ -597,9 +610,12 @@ Cloudflare's IANA Private Enterprise Number (PEN) arc.
 
 ## Security of Delegated Credential's Private Key
 
-Delegated credentials limit the exposure of the private key used in a (D)TLS connection by limiting
-its validity period.  An attacker who compromises the private key of a delegated
-credential can act as a man-in-the-middle until the delegated credential expires.
+Delegated credentials limit the exposure of the private key used in
+a (D)TLS connection by limiting its validity period.  An attacker who
+compromises the private key of a delegated credential can
+impersonate the compromised party in new TLS connections until the
+delegated credential expires.
+
 However, they cannot create new delegated credentials.  Thus, delegated
 credentials should not be used to send a delegation to an untrusted party, but
 are meant to be used between parties that have some trust relationship with each
@@ -624,9 +640,10 @@ the delegated credential.
 
 ## Interactions with Session Resumption
 
-If a client decides to cache the certificate chain and re-validate it
-when resuming a connection, the client SHOULD also cache the associated
-delegated credential and re-validate it.
+If a peer decides to cache the certificate chain and re-validate it
+when resuming a connection, they SHOULD also cache the
+associated delegated credential and re-validate it.  Failing to do so
+may result in resuming connections for which the DC has expired.
 
 ## Privacy Considerations
 
