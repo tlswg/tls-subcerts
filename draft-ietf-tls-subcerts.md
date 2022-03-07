@@ -687,7 +687,7 @@ END
 
 # Test Vectors
 
-The following is a PEM encoded certificate supporting delegated credentials
+The following is a PEM encoded certificate supporting delegated credentials.
 
 ~~~~~~~
 -----BEGIN CERTIFICATE-----
