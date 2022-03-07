@@ -122,7 +122,7 @@ a smaller window of time to renew a certificates and therefore a higher risk tha
 an outage at a CA will negatively affect the uptime of the TLS-fronted service.
 
 Typically, a (D)TLS server uses a certificate provided by some entity other than
-the operator of the server (a "Certification Authority" or CA) {{!RFC8446}} {{!ID.ietf-tls-dtls13}}
+the operator of the server (a "Certification Authority" or CA) {{!RFC8446}}
 {{!RFC5280}}.  This organizational separation makes the (D)TLS server operator
 dependent on the CA for some aspects of its operations, for example:
 
@@ -306,7 +306,7 @@ server has to interact with a back-end server that holds a private key.  The
 mechanism proposed in this document allows the delegation to be done
 off-line, with no per-transaction latency.  The figure below compares the
 message flows for these two mechanisms
-with (D)TLS 1.3 {{RFC8446}} {{ID.ietf-tls-dtls13}}.
+with (D)TLS 1.3 {{RFC8446}}.
 
 ~~~~~~~~~~
 Remote key signing:
@@ -595,7 +595,7 @@ This document registers the "delegated_credential" extension in the
 extension has been assigned a code point of 34.  The IANA registry
 lists this extension as "Recommended" (i.e., "Y") and indicates that
 it may appear in the ClientHello (CH), CertificateRequest (CR),
-or Certificate (CT) messages in (D)TLS 1.3 {{RFC8446}} {{ID.ietf-tls-dtls13}}.
+or Certificate (CT) messages in (D)TLS 1.3 {{RFC8446}}.
 Additionally, the "DTLS-Only" column is assigned the value "N".
 
 This document also defines an ASN.1 module for the DelegationUsage
