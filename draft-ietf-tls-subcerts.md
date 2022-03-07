@@ -245,8 +245,7 @@ the certificate owner.  If a credential is stolen, there is no mechanism for
 revoking it without revoking the certificate itself.  To limit exposure in case
 of the compromise of a delegated credential's private key, delegated credentials
 have a maximum validity period.  In the absence of an application profile standard
-specifying otherwise, the maximum validity period is set to 7 days.  Peers MUST
-NOT issue credentials with a validity period longer than the maximum validity period.
+specifying otherwise, the maximum validity period is set to 7 days.  Peers MUST NOT issue credentials with a validity period longer than the maximum validity period or that extends beyond the validity period of the delegation certificate.
 This mechanism is described in detail in {{client-and-server-behavior}}.
 
 It was noted in [XPROT] that certificates in use by servers that support
