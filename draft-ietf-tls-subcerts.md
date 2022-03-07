@@ -1,4 +1,4 @@
-
+---
 title: Delegated Credentials for (D)TLS
 abbrev:
 docname: draft-ietf-tls-subcerts-latest
@@ -306,7 +306,8 @@ server has to interact with a back-end server that holds a private key.  The
 mechanism proposed in this document allows the delegation to be done
 off-line, with no per-transaction latency.  The figure below compares the
 message flows for these two mechanisms
-with (D)TLS 1.3 {{RFC8446}}.
+with (D)TLS 1.3 {{RFC8446}} {{!I-D.ietf-tls-dtls13}}.
+
 
 ~~~~~~~~~~
 Remote key signing:
@@ -595,7 +596,7 @@ This document registers the "delegated_credential" extension in the
 extension has been assigned a code point of 34.  The IANA registry
 lists this extension as "Recommended" (i.e., "Y") and indicates that
 it may appear in the ClientHello (CH), CertificateRequest (CR),
-or Certificate (CT) messages in (D)TLS 1.3 {{RFC8446}}.
+or Certificate (CT) messages in (D)TLS 1.3 {{RFC8446}} {{!I-D.ietf-tls-dtls13}}.
 Additionally, the "DTLS-Only" column is assigned the value "N".
 
 This document also defines an ASN.1 module for the DelegationUsage
