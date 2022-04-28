@@ -94,13 +94,13 @@ informative:
 
 --- abstract
 
-The organizational separation between the operator of a (D)TLS endpoint
-and the certification authority can create limitations.  For example,
-the lifetime of certificates, how they may be used, and the
+The organizational separation between operators of TLS and DTLS
+endpoints and the certification authority can create limitations.  For
+example, the lifetime of certificates, how they may be used, and the
 algorithms they support are ultimately determined by the
 certification authority.  This document describes a mechanism to
 to overcome some of these limitations by enabling operators to
-delegate their own credentials for use in (D)TLS without breaking
+delegate their own credentials for use in TLS and DTLS without breaking
 compatibility with peers that do not support this specification.
 
 --- middle
@@ -115,14 +115,14 @@ to TLS certificates.  Short-lived certificates may be
 used to limit the exposure of keys in these cases.
 
 However, short-lived certificates need to be renewed more frequently than
-long-lived certificates.  If an external CA is unable to issue a certificate in
+long-lived certificates.  If an external Certification Authority (CA) is unable to issue a certificate in
 time to replace a deployed certificate, the server would no longer be able to
 present a valid certificate to clients.  With short-lived certificates, there is
 a smaller window of time to renew a certificates and therefore a higher risk that
 an outage at a CA will negatively affect the uptime of the TLS-fronted service.
 
 Typically, a (D)TLS server uses a certificate provided by some entity other than
-the operator of the server (a "Certification Authority" or CA) {{!RFC8446}}
+the operator of the server (a CA) {{!RFC8446}}
 {{!RFC5280}}.  This organizational separation makes the (D)TLS server operator
 dependent on the CA for some aspects of its operations, for example:
 
@@ -132,14 +132,14 @@ dependent on the CA for some aspects of its operations, for example:
   which can limit the set of (D)TLS signature schemes usable by the server
   operator.
 
-To reduce the dependency on external CAs, this document proposes a limited delegation
+To reduce the dependency on external CAs, this document specifies a limited delegation
 mechanism that allows a (D)TLS peer to issue its own credentials within
 the scope of a certificate issued by an external CA.  These credentials only enable the
 recipient of the delegation to speak for names that the CA has authorized.  Furthermore,
 this mechanism allows the server to use modern signature algorithms such as
 Ed25519 {{?RFC8032}} even if their CA does not support them.
 
-We will refer to the certificate issued by the CA as a "certificate",
+This document refers to the certificate issued by the CA as a "certificate",
 or "delegation certificate", and the one issued by the operator as a "delegated
 credential" or "DC".
 
@@ -277,7 +277,7 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
   consequences if a service owner creates a proxy certificate where
   the properties differ from the leaf certificate.  Proxy certificates can
   be useful in controlled environments, but remain a risk in scenarios
-  where the additional flexibility they provide are not necessary.  For
+  where the additional flexibility they provide is not necessary.  For
   this reason,  delegated credentials have very restricted semantics
   that should not conflict with X.509 semantics.
 * Proxy certificates rely on the certificate path building process to establish
@@ -515,7 +515,7 @@ delegated credentials MUST terminate the connection with an
 
 On receiving a delegated credential and certificate chain, the peer validates
 the certificate chain and matches the end-entity certificate to the peer's
-expected identity in the same way that is done when delegated credentials are
+expected identity in the same way that it is done when delegated credentials are
 not in use. It then performs the following checks with expiry time set to the 
 delegation certificate's notBefore value plus DelegatedCredential.cred.valid_time:
 
@@ -546,7 +546,7 @@ CertificateVerify message.
 
 ## Certificate Requirements
 
-We define a new X.509 extension, DelegationUsage, to be used in the certificate
+This documnt defines a new X.509 extension, DelegationUsage, to be used in the certificate
 when the certificate permits the usage of delegated credentials.  What follows
 is the ASN.1 {{X.680}} for the DelegationUsage certificate extension.
 
@@ -576,6 +576,9 @@ without requiring CAs to issue new intermediate certificates.
 
 
 # Operational Considerations
+
+The operational consideration documented in this section should be
+taken into consideration when using Delegated Certificates.
 
 ## Client Clock Skew
 
@@ -607,6 +610,9 @@ is not needed as it is already assigned to the extension from
 Cloudflare's IANA Private Enterprise Number (PEN) arc.
 
 # Security Considerations
+
+The security consideration documented in this section should be
+taken into consideration when using Delegated Certificates.
 
 ## Security of Delegated Credential's Private Key
 
