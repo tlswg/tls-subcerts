@@ -99,7 +99,7 @@ and the certification authority can create limitations.  For example,
 the lifetime of certificates, how they may be used, and the
 algorithms they support are ultimately determined by the
 certification authority.  This document describes a mechanism to
-to overcome some of these limitations by enabling operators to
+overcome some of these limitations by enabling operators to
 delegate their own credentials for use in (D)TLS without breaking
 compatibility with peers that do not support this specification.
 
