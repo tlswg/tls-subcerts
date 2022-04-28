@@ -372,7 +372,8 @@ valid_time:
 : Time, in seconds relative to the delegation certificate's
   notBefore value, after which the delegated credential is no longer valid.
   Endpoints will reject delegated credentials that expire more than 7 days
-  from the current time (as described in {{client-and-server-behavior}}).
+  from the current time (as described in {{client-and-server-behavior}})
+  based on the default (see {{solution-overview}}.
 
 expected_cert_verify_algorithm:
 
@@ -647,7 +648,7 @@ may result in resuming connections for which the DC has expired.
 
 ## Privacy Considerations
 
-Delegated credentials can be valid for 7 days and it is much easier for a
+Delegated credentials can be valid for 7 days (by default) and it is much easier for a
 service to create delegated credentials than a certificate signed by a CA.  A
 service could determine the client time and clock skew by creating several
 delegated credentials with different expiry timestamps and observing whether the
@@ -673,7 +674,8 @@ For (D)TLS 1.2 servers that support RSA key exchange using a DC-enabled end-enti
 certificate, a hypothetical signature forgery attack would allow forging a
 signature over a delegated credential.
 The forged delegated credential could then be used by the attacker as the equivalent of a
-man-in-the-middle certificate, valid for a maximum of 7 days.
+man-in-the-middle certificate, valid for a maximum of 7 days (if the default
+valid_time is used).
 
 Server operators should therefore minimize the risk of using DC-enabled
 end-entity certificates where a signature forgery oracle may be present.
