@@ -240,7 +240,7 @@ in a few important ways:
   chain terminating in its certificate as well as the delegated credential.
 * The initiator uses information from the peer's certificate
   to verify the delegated credential and that the peer is asserting an
-  expected identity, determining an authentication result for the peer..
+  expected identity, determining an authentication result for the peer.
 * Peers accepting the delegated credential use it as the certificate
   key for the (D)TLS handshake.
 
