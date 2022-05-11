@@ -547,7 +547,7 @@ CertificateVerify message.
 
 ## Certificate Requirements
 
-This documnt defines a new X.509 extension, DelegationUsage, to be used in the certificate
+This document defines a new X.509 extension, DelegationUsage, to be used in the certificate
 when the certificate permits the usage of delegated credentials.  What follows
 is the ASN.1 {{X.680}} for the DelegationUsage certificate extension.
 
