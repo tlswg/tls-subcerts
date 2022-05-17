@@ -362,7 +362,7 @@ application.  The Credential has the following structure:
 ~~~~~~~~~~
    struct {
      uint32 valid_time;
-     SignatureScheme expected_cert_verify_algorithm;
+     SignatureScheme dc_cert_verify_algorithm;
      opaque ASN1_subjectPublicKeyInfo<1..2^24-1>;
    } Credential;
 ~~~~~~~~~~
@@ -375,7 +375,7 @@ valid_time:
   from the current time (as described in {{client-and-server-behavior}})
   based on the default (see {{solution-overview}}.
 
-expected_cert_verify_algorithm:
+dc_cert_verify_algorithm:
 
 : The signature algorithm of the Credential key pair, where the type
   SignatureScheme is as defined in {{RFC8446}}. This is expected to be
@@ -406,7 +406,7 @@ cred:
 
 algorithm:
 
-: The signature algorithm used to verify DelegatedCredential.signature.
+: The signature algorithm used to create DelegatedCredential.signature.
 
 signature:
 
@@ -416,9 +416,9 @@ signature:
 
 The signature of the DelegatedCredential is computed over the concatenation of:
 
-1. A string that consists of octet 32 (0x20) repeated 64 times.
-2. The context string "TLS, server delegated credentials" for server authentication and "TLS, client delegated credentials" for client authentication.
-3. A single 0 byte, which serves as the separator.
+1. An octet stream that consists of octet 32 (0x20) repeated 64 times.
+2. The non-null terminated context string "TLS, server delegated credentials" for server authentication and "TLS, client delegated credentials" for client authentication.
+3. A single octet 0x00, which serves as the separator.
 4. The DER-encoded X.509 end-entity certificate used to sign the
    DelegatedCredential.
 5. DelegatedCredential.cred.
@@ -451,7 +451,7 @@ This document defines the following (D)TLS extension code point.
 
 ### Server Authentication
 
-A client which supports this specification SHALL send a
+A client that is willing to use delegated credentials in a connection SHALL send a
 "delegated_credential" extension in its ClientHello. The body of the extension
 consists of a SignatureSchemeList (defined in {{RFC8446}}):
 
@@ -467,8 +467,8 @@ then the client MUST abort the handshake with an "unexpected_message" alert.
 
 If the extension is present, the server MAY send a delegated credential; if the
 extension is not present, the server MUST NOT send a delegated credential.
-The server MUST ignore the extension unless (D)TLS 1.3 or a later version is
-negotiated.  An example of when a server could choose not to send a delegated
+When a (D)TLS version negotiated is less than 1.3, the server MUST ignore this extension.
+An example of when a server could choose not to send a delegated
 credential is when the SignatureSchemes listed only contain signature schemes
 for which a corresponding delegated credential does not exist or are
 otherwise unsuitable for the connection.
@@ -479,7 +479,7 @@ delegated credentials sent as extensions to any other certificate.
 
 The algorithm field MUST be of a type advertised by the client in the
 "signature_algorithms" extension of the ClientHello message and
-the expected_cert_verify_algorithm field MUST be of a
+the dc_cert_verify_algorithm field MUST be of a
 type advertised by the client in the SignatureSchemeList and is
 considered invalid otherwise.  Clients that receive invalid delegated
 credentials MUST terminate the connection with an "illegal_parameter"
@@ -497,16 +497,15 @@ CertificateRequest, then the server MUST abort with an
 
 If the extension is present, the client MAY send a delegated credential; if the
 extension is not present, the client MUST NOT send a delegated credential.
-The client MUST ignore the extension unless (D)TLS 1.3 or a later version is
-negotiated.
+When a (D)TLS version negotiated is less than 1.3, the client MUST ignore this extension.
 
-The client MUST send the delegated credential as an extension in the
+The client MUST send the DC as an extension in the
 CertificateEntry of its end-entity certificate; the server SHOULD ignore
 delegated credentials sent as extensions to any other certificate.
 
 The algorithm field MUST be of a type advertised by the server
 in the "signature_algorithms" extension of the CertificateRequest message
-and the expected_cert_verify_algorithm field MUST be of a type
+and the dc_cert_verify_algorithm field MUST be of a type
 advertised by the server in the SignatureSchemeList
 and is considered invalid otherwise.  Servers that receive invalid
 delegated credentials MUST terminate the connection with an
@@ -517,7 +516,7 @@ delegated credentials MUST terminate the connection with an
 On receiving a delegated credential and certificate chain, the peer validates
 the certificate chain and matches the end-entity certificate to the peer's
 expected identity in the same way that it is done when delegated credentials are
-not in use. It then performs the following checks with expiry time set to the 
+not in use. It then performs the following checks with expiry time set to the
 delegation certificate's notBefore value plus DelegatedCredential.cred.valid_time:
 
 1. Verify that the current time is within the validity interval of the
@@ -528,7 +527,7 @@ delegation certificate's notBefore value plus DelegatedCredential.cred.valid_tim
    than the maximum validity period. This is done by asserting that the expiry
    time does not exceed the current time plus the maximum validity period (7
    days by default).
-1. Verify that expected_cert_verify_algorithm matches
+1. Verify that dc_cert_verify_algorithm matches
    the scheme indicated in the peer's CertificateVerify message and that the
    algorithm is allowed for use with delegated credentials.
 1. Verify that the end-entity certificate satisfies the conditions in
