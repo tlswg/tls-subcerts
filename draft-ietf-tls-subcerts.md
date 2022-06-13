@@ -395,9 +395,8 @@ valid_time:
 
 : Time, in seconds relative to the delegation certificate's
   notBefore value, after which the delegated credential is no longer valid.
-  Endpoints will reject delegated credentials that expire more than 7 days
-  from the current time (as described in {{client-and-server-behavior}})
-  based on the default (see {{solution-overview}}.
+  Endpoints will reject delegated credentials that expire more than the maximum validity period
+  later than the current time (as described in {{client-and-server-behavior}} and {{solution-overview}}).
 
 dc_cert_verify_algorithm:
 
