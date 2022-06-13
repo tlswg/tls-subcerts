@@ -108,7 +108,8 @@ compatibility with peers that do not support this specification.
 
 # Introduction
 
-Server operators often deploy (D)TLS termination services in locations such
+Server operators often deploy (D)TLS termination to act as the server for
+inbound TLS connections.  These termination services can be in locations such
 as remote data centers or Content Delivery Networks (CDNs) where it may
 be difficult to detect compromises of private key material corresponding
 to TLS certificates.  Short-lived certificates may be
@@ -142,6 +143,22 @@ Ed25519 {{?RFC8032}} even if their CA does not support them.
 This document refers to the certificate issued by the CA as a "certificate",
 or "delegation certificate", and the one issued by the operator as a "delegated
 credential" or "DC".
+
+~~~~~~~~~~
+Client            Front-End            Back-End
+  |                   |<--DC distribution->|
+  |----ClientHello--->|                    |
+  |<---ServerHello----|                    |
+  |<---Certificate----|                    |
+  |<---CertVerify-----|                    |
+  |        ...        |                    |
+
+Legend:
+Client: (D)TLS client
+Front-End: (D)TLS server (could be a TLS-termination service like a CDN)
+Back-End: Service with access to private key
+~~~~~~~~~~
+
 
 # Conventions and Terminology
 
@@ -330,7 +347,14 @@ Client            Front-End            Back-End
   |<---Certificate----|                    |
   |<---CertVerify-----|                    |
   |        ...        |                    |
+
+Legend:
+Client: (D)TLS client
+Front-End: (D)TLS server (could be a TLS-termination service like a CDN)
+Back-End: Service with access to private key
 ~~~~~~~~~~
+
+
 
 These two mechanisms can be complementary.  A server could use
 delegated credentials for clients that support them, while using a
