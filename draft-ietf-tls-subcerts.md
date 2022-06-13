@@ -235,7 +235,7 @@ draft-02
 
   * Specify undefined behavior in a few cases: when the client receives a DC
     without indicated support; when the client indicates the extension in an
-    invalid protocol version; and when DCs are sent as extensions to
+    non-valid protocol version; and when DCs are sent as extensions to
     certificates other than the end-entity certificate.
 
 
@@ -506,7 +506,7 @@ The algorithm field MUST be of a type advertised by the client in the
 "signature_algorithms" extension of the ClientHello message and
 the dc_cert_verify_algorithm field MUST be of a
 type advertised by the client in the SignatureSchemeList and is
-considered invalid otherwise.  Clients that receive invalid delegated
+considered not valid otherwise.  Clients that receive non-valid delegated
 credentials MUST terminate the connection with an "illegal_parameter"
 alert.
 
@@ -532,7 +532,7 @@ The algorithm field MUST be of a type advertised by the server
 in the "signature_algorithms" extension of the CertificateRequest message
 and the dc_cert_verify_algorithm field MUST be of a type
 advertised by the server in the SignatureSchemeList
-and is considered invalid otherwise.  Servers that receive invalid
+and is considered not valid otherwise.  Servers that receive non-valid
 delegated credentials MUST terminate the connection with an
 "illegal_parameter" alert.
 
@@ -562,7 +562,7 @@ delegation certificate's notBefore value plus DelegatedCredential.cred.valid_tim
    DelegatedCredential.algorithm.
 
 If one or more of these checks fail, then the delegated credential is deemed
-invalid.  Clients and servers that receive invalid delegated credentials MUST terminate the
+not valid.  Clients and servers that receive non-valid delegated credentials MUST terminate the
 connection with an "illegal_parameter" alert.
 
 If successful, the participant receiving the Certificate message uses the public
@@ -571,7 +571,7 @@ CertificateVerify message.
 
 ## Certificate Requirements
 
-This documnt defines a new X.509 extension, DelegationUsage, to be used in the certificate
+This document defines a new X.509 extension, DelegationUsage, to be used in the certificate
 when the certificate permits the usage of delegated credentials.  What follows
 is the ASN.1 {{X.680}} for the DelegationUsage certificate extension.
 
@@ -650,7 +650,7 @@ delegated credential expires.
 However, they cannot create new delegated credentials.  Thus, delegated
 credentials should not be used to send a delegation to an untrusted party, but
 are meant to be used between parties that have some trust relationship with each
-other.  The secrecy of the delegated credential's private key is thus important and
+other.  The secrecy of the delegated credential's private key is thus important, and
 access control mechanisms SHOULD be used to protect it, including file system
 controls, physical security, or hardware security modules.
 
@@ -664,7 +664,7 @@ authentication because issuing parties compute the corresponding signature using
 ## Revocation of Delegated Credentials
 
 Delegated credentials do not provide any additional form of early revocation.
-Since it is short lived, the expiry of the delegated credential revokes
+Since it is short-lived, the expiry of the delegated credential revokes
 the credential.  Revocation of the long term private key that signs the
 delegated credential (from the end-entity certificate) also implicitly revokes
 the delegated credential.
@@ -682,7 +682,7 @@ Delegated credentials can be valid for 7 days (by default) and it is much easier
 service to create delegated credentials than a certificate signed by a CA.  A
 service could determine the client time and clock skew by creating several
 delegated credentials with different expiry timestamps and observing whether the
-client would accept it.  Client time could be unique and thus privacy sensitive
+client would accept it.  Client time could be unique and thus privacy-sensitive
 clients, such as browsers in incognito mode, who do not trust the service might
 not want to advertise support for delegated credentials or limit the number of
 probes that a server can perform.
@@ -704,7 +704,7 @@ For (D)TLS 1.2 servers that support RSA key exchange using a DC-enabled end-enti
 certificate, a hypothetical signature forgery attack would allow forging a
 signature over a delegated credential.
 The forged delegated credential could then be used by the attacker as the equivalent of a
-man-in-the-middle certificate, valid for a maximum of 7 days (if the default
+on-path-attacker, valid for a maximum of 7 days (if the default
 valid_time is used).
 
 Server operators should therefore minimize the risk of using DC-enabled
