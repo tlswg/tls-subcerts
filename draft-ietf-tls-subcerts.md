@@ -136,7 +136,7 @@ dependent on the CA for some aspects of its operations, for example:
 To reduce the dependency on external CAs, this document specifies a limited delegation
 mechanism that allows a (D)TLS peer to issue its own credentials within
 the scope of a certificate issued by an external CA.  These credentials only enable the
-recipient of the delegation to speak for names that the CA has authorized.  Furthermore,
+recipient of the delegation to terminate connections for names that the CA has authorized.  Furthermore,
 this mechanism allows the server to use modern signature algorithms such as
 Ed25519 {{?RFC8032}} even if their CA does not support them.
 
@@ -379,7 +379,7 @@ While X.509 forbids end-entity certificates from being used as issuers for
 other certificates, it is valid to use them to issue other signed
 objects as long as the certificate contains the digitalSignature KeyUsage
 ({{RFC5280}} section 4.2.1.3).  (All certificates compatible with TLS 1.3 are
-required to contain the digitalSignature KeyUsage.)  We define a new signed
+required to contain the digitalSignature KeyUsage.)  This document defines a new signed
 object format that would encode only the semantics that are needed for this
 application.  The Credential has the following structure:
 
@@ -404,7 +404,8 @@ dc_cert_verify_algorithm:
 : The signature algorithm of the Credential key pair, where the type
   SignatureScheme is as defined in {{RFC8446}}. This is expected to be
   the same as the sender's CertificateVerify.algorithm (as described in {{validating-a-delegated-credential}}).  Only signature
-  algorithms allowed for use in CertificateVerify messages are allowed.  When
+  algorithms allowed for use in CertificateVerify messages are allowed (as
+  described in {{RFC8446}} Section 11).  When
   using RSA, the public key MUST NOT use the rsaEncryption OID.  As a result,
   the following algorithms are not allowed for use with delegated credentials:
   rsa_pss_rsae_sha256, rsa_pss_rsae_sha384, rsa_pss_rsae_sha512.
