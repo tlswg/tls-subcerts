@@ -395,8 +395,9 @@ valid_time:
 
 : Time, in seconds relative to the delegation certificate's
   notBefore value, after which the delegated credential is no longer valid.
-  Endpoints will reject delegated credentials that expire more than the maximum validity period
-  later than the current time (as described in {{client-and-server-behavior}} and {{solution-overview}}).
+  By default, unless set to an alternative value by an application profile (see
+  Section {{solution-overview}}), endpoints will reject delegated credentials that expire more than 7
+  days from the current time (as described in {{validating-a-delegated-credential}}).
 
 dc_cert_verify_algorithm:
 
@@ -643,11 +644,11 @@ taken into consideration when using Delegated Certificates.
 Delegated credentials limit the exposure of the private key used in
 a (D)TLS connection by limiting its validity period.  An attacker who
 compromises the private key of a delegated credential can
+cannot create new delegated credentials, but they can
 impersonate the compromised party in new TLS connections until the
 delegated credential expires.
 
-However, they cannot create new delegated credentials.  Thus, delegated
-credentials should not be used to send a delegation to an untrusted party, but
+Thus, delegated credentials should not be used to send a delegation to an untrusted party, but
 are meant to be used between parties that have some trust relationship with each
 other.  The secrecy of the delegated credential's private key is thus important, and
 access control mechanisms SHOULD be used to protect it, including file system
@@ -779,7 +780,9 @@ END
 
 # Example Certificate
 
-The following certificate has the Delegated Credentials OID.
+The following is an example of a delegation certificate which satisfies the
+requirements described in {{certificate-requirements}} (i.e., uses the DelegationUsage extension
+and has the digitalSignature KeyUsage).
 
 ~~~
 
