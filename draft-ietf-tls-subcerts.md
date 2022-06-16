@@ -643,7 +643,7 @@ taken into consideration when using Delegated Certificates.
 
 Delegated credentials limit the exposure of the private key used in
 a (D)TLS connection by limiting its validity period.  An attacker who
-compromises the private key of a delegated credential can
+compromises the private key of a delegated credential
 cannot create new delegated credentials, but they can
 impersonate the compromised party in new TLS connections until the
 delegated credential expires.
