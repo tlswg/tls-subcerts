@@ -108,7 +108,8 @@ compatibility with peers that do not support this specification.
 
 # Introduction
 
-Server operators often deploy (D)TLS termination services in locations such
+Server operators often deploy (D)TLS termination to act as the server for
+inbound TLS connections.  These termination services can be in locations such
 as remote data centers or Content Delivery Networks (CDNs) where it may
 be difficult to detect compromises of private key material corresponding
 to TLS certificates.  Short-lived certificates may be
@@ -135,13 +136,29 @@ dependent on the CA for some aspects of its operations, for example:
 To reduce the dependency on external CAs, this document specifies a limited delegation
 mechanism that allows a (D)TLS peer to issue its own credentials within
 the scope of a certificate issued by an external CA.  These credentials only enable the
-recipient of the delegation to speak for names that the CA has authorized.  Furthermore,
+recipient of the delegation to terminate connections for names that the CA has authorized.  Furthermore,
 this mechanism allows the server to use modern signature algorithms such as
 Ed25519 {{?RFC8032}} even if their CA does not support them.
 
 This document refers to the certificate issued by the CA as a "certificate",
 or "delegation certificate", and the one issued by the operator as a "delegated
 credential" or "DC".
+
+~~~~~~~~~~
+Client            Front-End            Back-End
+  |                   |<--DC distribution->|
+  |----ClientHello--->|                    |
+  |<---ServerHello----|                    |
+  |<---Certificate----|                    |
+  |<---CertVerify-----|                    |
+  |        ...        |                    |
+
+Legend:
+Client: (D)TLS client
+Front-End: (D)TLS server (could be a TLS-termination service like a CDN)
+Back-End: Service with access to private key
+~~~~~~~~~~
+
 
 # Conventions and Terminology
 
@@ -218,7 +235,7 @@ draft-02
 
   * Specify undefined behavior in a few cases: when the client receives a DC
     without indicated support; when the client indicates the extension in an
-    invalid protocol version; and when DCs are sent as extensions to
+    non-valid protocol version; and when DCs are sent as extensions to
     certificates other than the end-entity certificate.
 
 
@@ -330,7 +347,14 @@ Client            Front-End            Back-End
   |<---Certificate----|                    |
   |<---CertVerify-----|                    |
   |        ...        |                    |
+
+Legend:
+Client: (D)TLS client
+Front-End: (D)TLS server (could be a TLS-termination service like a CDN)
+Back-End: Service with access to private key
 ~~~~~~~~~~
+
+
 
 These two mechanisms can be complementary.  A server could use
 delegated credentials for clients that support them, while using a
@@ -355,7 +379,7 @@ While X.509 forbids end-entity certificates from being used as issuers for
 other certificates, it is valid to use them to issue other signed
 objects as long as the certificate contains the digitalSignature KeyUsage
 ({{RFC5280}} section 4.2.1.3).  (All certificates compatible with TLS 1.3 are
-required to contain the digitalSignature KeyUsage.)  We define a new signed
+required to contain the digitalSignature KeyUsage.)  This document defines a new signed
 object format that would encode only the semantics that are needed for this
 application.  The Credential has the following structure:
 
@@ -371,16 +395,17 @@ valid_time:
 
 : Time, in seconds relative to the delegation certificate's
   notBefore value, after which the delegated credential is no longer valid.
-  Endpoints will reject delegated credentials that expire more than 7 days
-  from the current time (as described in {{client-and-server-behavior}})
-  based on the default (see {{solution-overview}}.
+  By default, unless set to an alternative value by an application profile (see
+  Section {{solution-overview}}), endpoints will reject delegated credentials that expire more than 7
+  days from the current time (as described in {{validating-a-delegated-credential}}).
 
 dc_cert_verify_algorithm:
 
 : The signature algorithm of the Credential key pair, where the type
   SignatureScheme is as defined in {{RFC8446}}. This is expected to be
   the same as the sender's CertificateVerify.algorithm (as described in {{validating-a-delegated-credential}}).  Only signature
-  algorithms allowed for use in CertificateVerify messages are allowed.  When
+  algorithms allowed for use in CertificateVerify messages are allowed (as
+  described in {{RFC8446}} Section 11).  When
   using RSA, the public key MUST NOT use the rsaEncryption OID.  As a result,
   the following algorithms are not allowed for use with delegated credentials:
   rsa_pss_rsae_sha256, rsa_pss_rsae_sha384, rsa_pss_rsae_sha512.
@@ -481,7 +506,7 @@ The algorithm field MUST be of a type advertised by the client in the
 "signature_algorithms" extension of the ClientHello message and
 the dc_cert_verify_algorithm field MUST be of a
 type advertised by the client in the SignatureSchemeList and is
-considered invalid otherwise.  Clients that receive invalid delegated
+considered not valid otherwise.  Clients that receive non-valid delegated
 credentials MUST terminate the connection with an "illegal_parameter"
 alert.
 
@@ -507,7 +532,7 @@ The algorithm field MUST be of a type advertised by the server
 in the "signature_algorithms" extension of the CertificateRequest message
 and the dc_cert_verify_algorithm field MUST be of a type
 advertised by the server in the SignatureSchemeList
-and is considered invalid otherwise.  Servers that receive invalid
+and is considered not valid otherwise.  Servers that receive non-valid
 delegated credentials MUST terminate the connection with an
 "illegal_parameter" alert.
 
@@ -537,7 +562,7 @@ delegation certificate's notBefore value plus DelegatedCredential.cred.valid_tim
    DelegatedCredential.algorithm.
 
 If one or more of these checks fail, then the delegated credential is deemed
-invalid.  Clients and servers that receive invalid delegated credentials MUST terminate the
+not valid.  Clients and servers that receive non-valid delegated credentials MUST terminate the
 connection with an "illegal_parameter" alert.
 
 If successful, the participant receiving the Certificate message uses the public
@@ -546,7 +571,7 @@ CertificateVerify message.
 
 ## Certificate Requirements
 
-This documnt defines a new X.509 extension, DelegationUsage, to be used in the certificate
+This document defines a new X.509 extension, DelegationUsage, to be used in the certificate
 when the certificate permits the usage of delegated credentials.  What follows
 is the ASN.1 {{X.680}} for the DelegationUsage certificate extension.
 
@@ -618,14 +643,14 @@ taken into consideration when using Delegated Certificates.
 
 Delegated credentials limit the exposure of the private key used in
 a (D)TLS connection by limiting its validity period.  An attacker who
-compromises the private key of a delegated credential can
+compromises the private key of a delegated credential
+cannot create new delegated credentials, but they can
 impersonate the compromised party in new TLS connections until the
 delegated credential expires.
 
-However, they cannot create new delegated credentials.  Thus, delegated
-credentials should not be used to send a delegation to an untrusted party, but
+Thus, delegated credentials should not be used to send a delegation to an untrusted party, but
 are meant to be used between parties that have some trust relationship with each
-other.  The secrecy of the delegated credential's private key is thus important and
+other.  The secrecy of the delegated credential's private key is thus important, and
 access control mechanisms SHOULD be used to protect it, including file system
 controls, physical security, or hardware security modules.
 
@@ -639,7 +664,7 @@ authentication because issuing parties compute the corresponding signature using
 ## Revocation of Delegated Credentials
 
 Delegated credentials do not provide any additional form of early revocation.
-Since it is short lived, the expiry of the delegated credential revokes
+Since it is short-lived, the expiry of the delegated credential revokes
 the credential.  Revocation of the long term private key that signs the
 delegated credential (from the end-entity certificate) also implicitly revokes
 the delegated credential.
@@ -657,7 +682,7 @@ Delegated credentials can be valid for 7 days (by default) and it is much easier
 service to create delegated credentials than a certificate signed by a CA.  A
 service could determine the client time and clock skew by creating several
 delegated credentials with different expiry timestamps and observing whether the
-client would accept it.  Client time could be unique and thus privacy sensitive
+client would accept it.  Client time could be unique and thus privacy-sensitive
 clients, such as browsers in incognito mode, who do not trust the service might
 not want to advertise support for delegated credentials or limit the number of
 probes that a server can perform.
@@ -679,7 +704,7 @@ For (D)TLS 1.2 servers that support RSA key exchange using a DC-enabled end-enti
 certificate, a hypothetical signature forgery attack would allow forging a
 signature over a delegated credential.
 The forged delegated credential could then be used by the attacker as the equivalent of a
-man-in-the-middle certificate, valid for a maximum of 7 days (if the default
+on-path-attacker, valid for a maximum of 7 days (if the default
 valid_time is used).
 
 Server operators should therefore minimize the risk of using DC-enabled
@@ -755,7 +780,9 @@ END
 
 # Example Certificate
 
-The following certificate has the Delegated Credentials OID.
+The following is an example of a delegation certificate which satisfies the
+requirements described in {{certificate-requirements}} (i.e., uses the DelegationUsage extension
+and has the digitalSignature KeyUsage).
 
 ~~~
 
