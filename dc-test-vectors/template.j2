@@ -1,0 +1,41 @@
+services:
+{%- for svc in svcs %}
+  {{ svcs[svc].name }}-client:
+    build:
+      context: .
+      target: client
+      dockerfile: {{ svcs[svc].name }}/Dockerfile.serve
+    links:
+      - "{{ svcs[svc].name }}-server:{{ svcs[svc].url }}"
+    volumes:
+      - "./{{ svcs[svc].name }}/output/keys/:/ca/:ro"
+    depends_on:
+      {{ svcs[svc].name }}-server:
+        condition: service_healthy
+
+  {{ svcs[svc].name }}-server:
+    build:
+      context: .
+      target: server
+      dockerfile: {{ svcs[svc].name }}/Dockerfile.serve
+    ports:
+      - "{{ svcs[svc].port }}:8081"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - "./{{ svcs[svc].name }}/output/pcaps:/out/:rw"
+      - "./{{ svcs[svc].name }}/output/keys:/certs:ro"
+    depends_on:
+      {{ svcs[svc].name }}-writer:
+        condition: service_completed_successfully
+
+  {{ svcs[svc].name }}-writer:
+    build:
+      context: .
+      target: gencerts
+      dockerfile: Dockerfile.gc
+    volumes:
+      - "./{{ svcs[svc].name }}/output/keys:/out/"
+      - "./{{ svcs[svc].name }}:/certs:ro"
+{%- endfor %}
