@@ -1,0 +1,16 @@
+FROM alpine AS gobuilder
+RUN apk add git openssh go bash
+RUN git clone --branch dcs_with_rsapss --single-branch https://github.com/jhoyla/go.git
+WORKDIR go/src
+RUN ./make.bash
+COPY cmd/ /utils/cmd/
+RUN CGO_ENABLED=0 /go/bin/go build /utils/cmd/fetch_dc/fetch_dc.go
+RUN CGO_ENABLED=0 /go/bin/go build /utils/cmd/serve_dc/serve_dc.go
+RUN CGO_ENABLED=0 /go/bin/go build /go/src/crypto/tls/generate_delegated_credential.go
+
+
+FROM alpine AS gencerts 
+WORKDIR /certs
+RUN apk add openssl
+COPY --from=gobuilder /go/src/generate_delegated_credential /util/generate_delegated_credential
+CMD ["/certs/commands.sh"]

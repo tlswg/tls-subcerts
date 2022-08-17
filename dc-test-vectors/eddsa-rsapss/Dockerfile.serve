@@ -1,0 +1,22 @@
+FROM alpine AS gobuilder
+RUN apk add git openssh go bash
+RUN git clone --branch dcs_with_rsapss --single-branch https://github.com/jhoyla/go.git
+WORKDIR go/src
+RUN ./make.bash
+COPY cmd/ /utils/cmd/
+RUN CGO_ENABLED=0 /go/bin/go build /utils/cmd/fetch_dc/fetch_dc.go
+RUN CGO_ENABLED=0 /go/bin/go build /utils/cmd/serve_dc/serve_dc.go
+RUN CGO_ENABLED=0 /go/bin/go build /go/src/crypto/tls/generate_delegated_credential.go
+
+FROM alpine AS client
+WORKDIR /probe
+COPY --from=gobuilder /go/src/fetch_dc /probe/fetch_dc
+CMD ["./fetch_dc", "-root=/ca/root.pem", "-hostname=rsapss.example", "-address=rsapss.example", "-port=8081"]
+
+FROM alpine AS server
+WORKDIR /certs
+RUN apk add libstdc++ tcpdump
+COPY --from=gobuilder /go/src/serve_dc /util/serve_dc
+COPY eddsa-rsapss/serve.sh /util/serve.sh
+HEALTHCHECK --interval=3s CMD ["pgrep", "-fl", "serve_dc"]
+CMD ["/util/serve.sh"]

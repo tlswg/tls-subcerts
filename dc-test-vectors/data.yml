@@ -1,0 +1,26 @@
+svcs:
+  ecdsa-eddsa:
+    name: ecdsa-eddsa
+    url: eddsa.example
+    port: 8081
+  ecdsa-rsapss:
+    name: ecdsa-rsapss
+    url: rsapss.example
+    port: 8082
+  eddsa-ecdsa:
+    name: eddsa-ecdsa
+    url: ecdsa.example
+    port: 8083
+  eddsa-rsapss:
+    name: eddsa-rsapss
+    url: rsapss.example
+    port: 8084
+  rsapss-ecdsa:
+    name: rsapss-ecdsa
+    url: ecdsa.example
+    port: 8085
+  rsarsae-eddsa:
+    name: rsarsae-eddsa
+    url: eddsa.example
+    port: 8086
+
