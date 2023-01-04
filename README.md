@@ -24,7 +24,7 @@ The initial version of the file has been edited minimally for correctness.  The 
 * rfced - initial label of RFC Editor questions and FYIs (keep this label if the issue is still active).
 * question - a follow-up question has been added to the issue discussion. Use @mention to identify the participant who should answer. 
 * AD approval required - the resolution of the issue requires the AD to review and approve the change.
-* editor-ready - the RFC Editor can update the document and/or close the issue based on the issue discussion.
+* rfced-ready - the RFC Editor can update the document and/or close the issue based on the issue discussion.
 
 Feel free to add new issues and PRs for new edits and questions. 
 
