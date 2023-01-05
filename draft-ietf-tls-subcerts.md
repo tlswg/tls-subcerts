@@ -1,13 +1,15 @@
 ---
 title: Delegated Credentials for (D)TLS
 abbrev:
-docname: draft-ietf-tls-subcerts-latest
+docname: draft-ietf-tls-subcerts-15
+submissionType: IETF
+date: January 2023
 category: std
 
 ipr: trust200902
-area: Security
-workgroup:
-keyword: Internet-Draft
+# area: Security
+# workgroup: tls
+keyword: 
 
 stand_alone: yes
 pi: [toc, sortrefs, symrefs]
@@ -95,10 +97,10 @@ informative:
 --- abstract
 
 The organizational separation between operators of TLS and DTLS
-endpoints and the certification authority can create limitations.  For
+endpoints and the certification authority (CA) can create limitations.  For
 example, the lifetime of certificates, how they may be used, and the
 algorithms they support are ultimately determined by the
-certification authority.  This document describes a mechanism to
+certification authority.  This document describes a mechanism 
 to overcome some of these limitations by enabling operators to
 delegate their own credentials for use in TLS and DTLS without breaking
 compatibility with peers that do not support this specification.
@@ -119,17 +121,17 @@ However, short-lived certificates need to be renewed more frequently than
 long-lived certificates.  If an external Certification Authority (CA) is unable to issue a certificate in
 time to replace a deployed certificate, the server would no longer be able to
 present a valid certificate to clients.  With short-lived certificates, there is
-a smaller window of time to renew a certificates and therefore a higher risk that
+a smaller window of time to renew the certificates and therefore a higher risk that
 an outage at a CA will negatively affect the uptime of the TLS-fronted service.
 
 Typically, a (D)TLS server uses a certificate provided by some entity other than
 the operator of the server (a CA) {{!RFC8446}}
 {{!RFC5280}}.  This organizational separation makes the (D)TLS server operator
-dependent on the CA for some aspects of its operations, for example:
+dependent on the CA for some aspects of its operations; for example:
 
 * Whenever the server operator wants to deploy a new certificate, it has to
   interact with the CA.
-* The CA might only issue credentials containing certain types of public key,
+* The CA might only issue credentials containing certain types of public keys,
   which can limit the set of (D)TLS signature schemes usable by the server
   operator.
 
@@ -156,7 +158,7 @@ Client            Front-End            Back-End
 Legend:
 Client: (D)TLS client
 Front-End: (D)TLS server (could be a TLS-termination service like a CDN)
-Back-End: Service with access to private key
+Back-End: Service with access to a private key
 ~~~~~~~~~~
 
 
@@ -168,75 +170,6 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 14 {{!RFC2119}} {{!RFC8174}} when, and only when, they appear in all
 capitals, as shown here.
 
-
-## Change Log
-
-RFC EDITOR PLEASE DELETE THIS SECTION.
-
-(\*) indicates changes to the wire protocol.
-
-draft-11
-
-   * Editorial changes based on AD comments
-   * Add support for DTLS
-   * Address address ambiguity in cert expiry
-
-draft-10
-
-   * Address superficial comments
-   * Add example certificate
-
-draft-09
-
-   * Address case nits
-   * Fix section bullets in 4.1.3.
-   * Add operational considerations section for clock skew
-   * Add text around using an oracle to forge DCs in the future and past
-   * Add text about certificate extension vs EKU
-
-draft-08
-
-   * Include details about the impact of signature forgery attacks
-   * Copy edits
-   * Fix section about DC reuse
-   * Incorporate feedback from Jonathan Hammell and Kevin Jacobs on the list
-
-draft-07
-
-   * Minor text improvements
-
-draft-06
-
-   * Modified IANA section, fixed nits
-
-draft-05
-
-   * Removed support for PKCS 1.5 RSA signature algorithms.
-   * Additional security considerations.
-
-draft-04
-
-   * Add support for client certificates.
-
-draft-03
-
-   * Remove protocol version from the Credential structure. (*)
-
-draft-02
-
-  * Change public key type. (*)
-
-  * Change DelegationUsage extension to be NULL and define its object identifier.
-
-  * Drop support for TLS 1.2.
-
-  * Add the protocol version and credential signature algorithm to the
-    Credential structure. (*)
-
-  * Specify undefined behavior in a few cases: when the client receives a DC
-    without indicated support; when the client indicates the extension in an
-    non-valid protocol version; and when DCs are sent as extensions to
-    certificates other than the end-entity certificate.
 
 
 # Solution Overview
@@ -254,7 +187,7 @@ in a few important ways:
 * The initiating peer provides an extension in its ClientHello or CertificateRequest
   that indicates support for this mechanism.
 * The peer sending the Certificate message provides both the certificate
-  chain terminating in its certificate as well as the delegated credential.
+  chain terminating in its certificate and the delegated credential.
 * The initiator uses information from the peer's certificate
   to verify the delegated credential and that the peer is asserting an
   expected identity, determining an authentication result for the peer.
@@ -278,7 +211,7 @@ This mechanism is described in detail in {{client-and-server-behavior}}.
 It was noted in [XPROT] that certificates in use by servers that
 support outdated protocols such as SSLv2 can be used to forge
 signatures for certificates that contain the keyEncipherment KeyUsage
-({{RFC5280}} section 4.2.1.3).  In order to reduce the risk of cross-
+({{RFC5280, Section 4.2.1.3}}).  In order to reduce the risk of cross-
 protocol attacks on certificates that are not intended to be used
 with DC-capable TLS stacks, we define a new DelegationUsage
 extension to X.509 that permits use of delegated credentials.  (See {{certificate-requirements}}.)
@@ -305,7 +238,7 @@ mechanisms like proxy certificates {{?RFC3820}} for several reasons:
   which rely on a cryptographic binding between the entire certificate and the
   delegated credential, cannot.
 * Each delegated credential is bound to a specific signature algorithm for use
-  in the (D)TLS handshake ({{RFC8446}} section 4.2.3).  This prevents
+  in the (D)TLS handshake ({{RFC8446, Section 4.2.3}}).  This prevents
   them from being used with other, perhaps unintended, signature algorithms.
   The signature algorithm bound to the delegated credential can be chosen
   independently of the set of signature algorithms supported by the end-entity
@@ -323,7 +256,7 @@ server has to interact with a back-end server that holds a private key.  The
 mechanism proposed in this document allows the delegation to be done
 off-line, with no per-transaction latency.  The figure below compares the
 message flows for these two mechanisms
-with (D)TLS 1.3 {{RFC8446}} {{!I-D.ietf-tls-dtls13}}.
+with (D)TLS 1.3 {{RFC8446}} {{!RFC9147}}.
 
 
 ~~~~~~~~~~
@@ -351,7 +284,7 @@ Client            Front-End            Back-End
 Legend:
 Client: (D)TLS client
 Front-End: (D)TLS server (could be a TLS-termination service like a CDN)
-Back-End: Service with access to private key
+Back-End: Service with access to a private key
 ~~~~~~~~~~
 
 
@@ -364,9 +297,9 @@ the delegated credential can be used in place of a certificate
 private key.
 
 Use of short-lived certificates with automated certificate issuance,
-e.g., with Automated Certificate Management Environment (ACME) {{?RFC8555}},
-reduces the risk of key compromise, but has several limitations.
-Specifically, it introduces an operationally-critical dependency on an
+e.g., with the Automated Certificate Management Environment (ACME) {{?RFC8555}},
+reduces the risk of key compromise but has several limitations.
+Specifically, it introduces an operationally critical dependency on an
 external party (the CA).  It also
 limits the types of algorithms supported for (D)TLS authentication to those
 the CA is willing to issue a certificate for.  Nonetheless, existing
@@ -378,7 +311,7 @@ automated issuance APIs like ACME may be useful for provisioning delegated crede
 While X.509 forbids end-entity certificates from being used as issuers for
 other certificates, it is valid to use them to issue other signed
 objects as long as the certificate contains the digitalSignature KeyUsage
-({{RFC5280}} section 4.2.1.3).  (All certificates compatible with TLS 1.3 are
+({{RFC5280, Section 4.2.1.3}}).  (All certificates compatible with TLS 1.3 are
 required to contain the digitalSignature KeyUsage.)  This document defines a new signed
 object format that would encode only the semantics that are needed for this
 application.  The Credential has the following structure:
@@ -396,7 +329,7 @@ valid_time:
 : Time, in seconds relative to the delegation certificate's
   notBefore value, after which the delegated credential is no longer valid.
   By default, unless set to an alternative value by an application profile (see
-  Section {{solution-overview}}), endpoints will reject delegated credentials that expire more than 7
+  {{solution-overview}}), endpoints will reject delegated credentials that expire more than 7
   days from the current time (as described in {{validating-a-delegated-credential}}).
 
 dc_cert_verify_algorithm:
@@ -405,10 +338,10 @@ dc_cert_verify_algorithm:
   SignatureScheme is as defined in {{RFC8446}}. This is expected to be
   the same as the sender's CertificateVerify.algorithm (as described in {{validating-a-delegated-credential}}).  Only signature
   algorithms allowed for use in CertificateVerify messages are allowed (as
-  described in {{RFC8446}} Section 11).  When
+  described in {{RFC8446, Section 11}}).  When
   using RSA, the public key MUST NOT use the rsaEncryption OID.  As a result,
   the following algorithms are not allowed for use with delegated credentials:
-  rsa_pss_rsae_sha256, rsa_pss_rsae_sha384, rsa_pss_rsae_sha512.
+  rsa_pss_rsae_sha256, rsa_pss_rsae_sha384, and rsa_pss_rsae_sha512.
 
 ASN1_subjectPublicKeyInfo:
 
@@ -541,7 +474,7 @@ delegated credentials MUST terminate the connection with an
 On receiving a delegated credential and certificate chain, the peer validates
 the certificate chain and matches the end-entity certificate to the peer's
 expected identity in the same way that it is done when delegated credentials are
-not in use. It then performs the following checks with expiry time set to the
+not in use. It then performs the following checks with the expiry time set to the
 delegation certificate's notBefore value plus DelegatedCredential.cred.valid_time:
 
 1. Verify that the current time is within the validity interval of the
@@ -587,7 +520,7 @@ is the ASN.1 {{X.680}} for the DelegationUsage certificate extension.
           private(4) enterprise(1) id-cloudflare(44363) 44 }
 ~~~~~~~~~~
 
-The extension MUST be marked non-critical.  (See Section 4.2 of {{RFC5280}}.)
+The extension MUST be marked non-critical.  (See {{Section 4.2 of RFC5280}}.)
 An endpoint MUST NOT accept a delegated credential unless the peer's end-entity
 certificate satisfies the following criteria:
 
@@ -602,14 +535,14 @@ without requiring CAs to issue new intermediate certificates.
 
 # Operational Considerations
 
-The operational consideration documented in this section should be
+The operational considerations documented in this section should be
 taken into consideration when using Delegated Certificates.
 
 ## Client Clock Skew
 
 One of the risks of deploying a short-lived credential system based
 on absolute time is client clock skew.  If a client's clock is sufficiently
-ahead or behind of the server's clock, then clients will reject delegated credentials
+ahead of or behind the server's clock, then clients will reject delegated credentials
 that are valid from the server's perspective.  Clock
 skew also affects the validity of the original certificates.  The lifetime
 of the delegated credential should be set taking clock skew into account.
@@ -621,22 +554,22 @@ its validity periods, which should also be taken into account.
 
 This document registers the "delegated_credential" extension in the
 "TLS ExtensionType Values" registry.  The "delegated_credential"
-extension has been assigned a code point of 34.  The IANA registry
+extension has been assigned code point 34.  The IANA registry
 lists this extension as "Recommended" (i.e., "Y") and indicates that
 it may appear in the ClientHello (CH), CertificateRequest (CR),
-or Certificate (CT) messages in (D)TLS 1.3 {{RFC8446}} {{!I-D.ietf-tls-dtls13}}.
+or Certificate (CT) messages in (D)TLS 1.3 {{RFC8446}} {{RFC9147}}.
 Additionally, the "DTLS-Only" column is assigned the value "N".
 
 This document also defines an ASN.1 module for the DelegationUsage
 certificate extension in {{module}}.  IANA has registered value 95 for
 "id-mod-delegated-credential-extn" in the "SMI Security for PKIX Module
 Identifier" (1.3.5.1.5.5.7.0) registry.  An OID for the DelegationUsage certificate extension
-is not needed as it is already assigned to the extension from
+is not needed, as it is already assigned to the extension from
 Cloudflare's IANA Private Enterprise Number (PEN) arc.
 
 # Security Considerations
 
-The security consideration documented in this section should be
+The security considerations documented in this section should be
 taken into consideration when using Delegated Certificates.
 
 ## Security of Delegated Credential's Private Key
@@ -648,7 +581,7 @@ cannot create new delegated credentials, but they can
 impersonate the compromised party in new TLS connections until the
 delegated credential expires.
 
-Thus, delegated credentials should not be used to send a delegation to an untrusted party, but
+Thus, delegated credentials should not be used to send a delegation to an untrusted party; rather, they
 are meant to be used between parties that have some trust relationship with each
 other.  The secrecy of the delegated credential's private key is thus important, and
 access control mechanisms SHOULD be used to protect it, including file system
@@ -664,8 +597,8 @@ authentication because issuing parties compute the corresponding signature using
 ## Revocation of Delegated Credentials
 
 Delegated credentials do not provide any additional form of early revocation.
-Since it is short-lived, the expiry of the delegated credential revokes
-the credential.  Revocation of the long term private key that signs the
+Since it is short lived, the expiry of the delegated credential revokes
+the credential.  Revocation of the long-term private key that signs the
 delegated credential (from the end-entity certificate) also implicitly revokes
 the delegated credential.
 
@@ -678,12 +611,12 @@ may result in resuming connections for which the DC has expired.
 
 ## Privacy Considerations
 
-Delegated credentials can be valid for 7 days (by default) and it is much easier for a
+Delegated credentials can be valid for 7 days (by default), and it is much easier for a
 service to create delegated credentials than a certificate signed by a CA.  A
 service could determine the client time and clock skew by creating several
 delegated credentials with different expiry timestamps and observing whether the
-client would accept it.  Client time could be unique and thus privacy-sensitive
-clients, such as browsers in incognito mode, who do not trust the service might
+client would accept it.  Client time could be unique; thus privacy-sensitive
+clients, such as browsers in incognito mode, who do not trust the service, might
 not want to advertise support for delegated credentials or limit the number of
 probes that a server can perform.
 
@@ -697,20 +630,20 @@ attack against delegated credentials in (D)TLS 1.3.
 When (D)TLS 1.2 servers support RSA key exchange, they may be vulnerable to attacks
 that allow forging an RSA signature over an arbitrary message [BLEI].
 TLS 1.2 {{?RFC5246}} (Section 7.4.7.1.) describes a mitigation strategy requiring
-careful implementation of timing resistant countermeasures for preventing these attacks.
-Experience shows that in practice, server implementations may fail to fully
+careful implementation of timing-resistant countermeasures for preventing these attacks.
+Experience shows that, in practice, server implementations may fail to fully
 stop these attacks due to the complexity of this mitigation [ROBOT].
 For (D)TLS 1.2 servers that support RSA key exchange using a DC-enabled end-entity
 certificate, a hypothetical signature forgery attack would allow forging a
 signature over a delegated credential.
-The forged delegated credential could then be used by the attacker as the equivalent of a
-on-path-attacker, valid for a maximum of 7 days (if the default
+The forged delegated credential could then be used by the attacker as the equivalent of an
+on-path attacker, valid for a maximum of 7 days (if the default
 valid_time is used).
 
 Server operators should therefore minimize the risk of using DC-enabled
 end-entity certificates where a signature forgery oracle may be present.
 If possible, server operators may choose to use DC-enabled certificates only for signing
-credentials, and not for serving non-DC (D)TLS traffic.
+credentials and not for serving non-DC (D)TLS traffic.
 Furthermore, server operators may use elliptic curve certificates for DC-enabled
 traffic, while using RSA certificates without the DelegationUsage certificate
 extension for non-DC traffic; this completely prevents such attacks.
@@ -723,13 +656,6 @@ certificate.  Temporary exposure of the key or a signing oracle may
 allow the attacker to impersonate a server for the lifetime of the certificate.
 
 
-# Acknowledgements
-
-Thanks to David Benjamin, Christopher Patton, Kyle Nekritz, Anirudh Ramachandran, Benjamin
-Kaduk, Kazuho Oku, Daniel Kahn Gillmor, Watson Ladd, Robert Merget, Juraj
-Somorovsky, Nimrod Aviram for their discussions, ideas,
-and bugs they have found.
-
 --- back
 
 # ASN.1 Module {#module}
@@ -738,7 +664,7 @@ The following ASN.1 module provides the complete definition of the
 DelegationUsage certificate extension.  The ASN.1 module makes imports
 from {{?RFC5912}}.
 
-~~~
+~~~~~~~~
 
 DelegatedCredentialExtn
   { iso(1) identified-organization(3) dod(6) internet(1)
@@ -776,15 +702,15 @@ DelegationUsage ::= NULL
 
 END
 
-~~~
+~~~~~~~~
 
 # Example Certificate
 
-The following is an example of a delegation certificate which satisfies the
+The following is an example of a delegation certificate that satisfies the
 requirements described in {{certificate-requirements}} (i.e., uses the DelegationUsage extension
 and has the digitalSignature KeyUsage).
 
-~~~
+~~~~~~~~
 
 -----BEGIN CERTIFICATE-----
 MIIFRjCCBMugAwIBAgIQDGevB+lY0o/OecHFSJ6YnTAKBggqhkjOPQQDAzBMMQsw
@@ -818,4 +744,11 @@ muGa1FE2ZgIxAL+CDUF5pz7mhrAEIjQ1MqlpF9tH40dJGvYZZQ3W23cMzSkDfvlt
 y5S4RfWHIIPjbw==
 -----END CERTIFICATE-----
 
-~~~
+~~~~~~~~
+
+# Acknowledgements
+
+Thanks to David Benjamin, Christopher Patton, Kyle Nekritz, Anirudh Ramachandran, Benjamin
+Kaduk, Kazuho Oku, Daniel Kahn Gillmor, Watson Ladd, Robert Merget, Juraj
+Somorovsky, and Nimrod Aviram for their discussions, ideas,
+and bugs they have found.
